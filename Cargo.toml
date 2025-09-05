@@ -1,0 +1,10 @@
+[package]
+name = "rust_bril"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+clap = { version = "4.5.47", features = ["derive"] }
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+uuid = { version = "1.18.1", features = ["v4"] }
