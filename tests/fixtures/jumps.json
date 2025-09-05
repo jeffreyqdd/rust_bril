@@ -1,0 +1,36 @@
+{
+  "functions": [
+    {
+      "instrs": [
+        {
+          "labels": [
+            "label1"
+          ],
+          "op": "jmp"
+        },
+        {
+          "labels": [
+            "label2"
+          ],
+          "op": "jmp"
+        },
+        {
+          "labels": [
+            "label3"
+          ],
+          "op": "jmp"
+        },
+        {
+          "label": "label1"
+        },
+        {
+          "label": "label2"
+        },
+        {
+          "label": "label3"
+        }
+      ],
+      "name": "main"
+    }
+  ]
+}
