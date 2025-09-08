@@ -8,15 +8,11 @@ struct Args {
     #[arg(short, long)]
     file: Option<String>,
 
-    /// Output file (if omitted, will write to `main.out.json`, `-` will print to stdout)
-    #[arg(short, long, default_value = "main.out.json")]
-    out: String,
+    /// lesson2: transform, which will add print statements before every `jmp` and `br` instruction (will write to stdout if no file is provided)
+    #[clap(long, num_args = 0..=1)]
+    transform_print: Option<Vec<String>>,
 
-    /// lesson2: transform, which will add print statements before every `jmp` and `br` instruction
-    #[clap(long, action)]
-    transform_print: bool,
-
-    /// lesson2: construct cfg and write to file (if omitted, will write to stdout)
+    /// lesson2: construct cfg and write to file (will write to stdout if no file is provided)
     #[clap(long, num_args = 0..=1)]
     construct_cfg: Option<Vec<String>>,
 }
@@ -29,14 +25,13 @@ fn main() {
         None => Program::from_stdin(),
     };
 
-    if args.transform_print {
+    if let Some(filepath) = args.transform_print {
         program = transform_print(program);
-    }
-
-    if args.out == "-" {
-        println!("{}", program.to_string());
-    } else {
-        program.to_file(&args.out);
+        if filepath.len() > 0 {
+            program.to_file(&filepath[0]);
+        } else {
+            println!("{}", program.to_string());
+        }
     }
 
     if let Some(filepath) = args.construct_cfg {

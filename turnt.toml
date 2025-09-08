@@ -1,2 +1,2 @@
 [envs.transform]
-command = "cargo run -- --out - --transform-print < {filename} | brilirs"
+command = "cargo run -- --transform-print < {filename} | brilirs"
