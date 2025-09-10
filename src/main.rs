@@ -19,6 +19,10 @@ struct Args {
     /// lesson2: construct cfg and write to file (will write to stdout if no file is provided)
     #[clap(long, num_args = 0..=1)]
     construct_cfg: Option<Vec<String>>,
+
+    /// lesson 3: local optimization (DCE)
+    #[arg(long, action)]
+    local: bool,
 }
 fn main() {
     let args = Args::parse();

@@ -20,12 +20,24 @@ pub struct BasicBlock {
     pub label: String,
     pub block: Vec<Code>,
     pub terminator: Terminator,
+    pub external_references: Vec<String>,
 }
 
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
 pub struct FunctionBlock {
     pub name: String,
     pub basic_blocks: Vec<BasicBlock>,
+}
+
+impl BasicBlock {
+    fn new(label: String, block: Vec<Code>, terminator: Terminator) -> Self {
+        Self {
+            label,
+            block,
+            terminator,
+            external_references: vec![],
+        }
+    }
 }
 
 impl Program {
@@ -54,11 +66,7 @@ impl Program {
                             curr_section
                         };
 
-                        let b = BasicBlock {
-                            label: l,
-                            block: curr_block,
-                            terminator: Terminator::Passthrough,
-                        };
+                        let b = BasicBlock::new(l, curr_block, Terminator::Passthrough);
 
                         basic_block.push(b);
 
@@ -88,11 +96,7 @@ impl Program {
                         };
 
                         curr_block.push(code.clone());
-                        basic_block.push(BasicBlock {
-                            label: l,
-                            block: curr_block,
-                            terminator: t,
-                        });
+                        basic_block.push(BasicBlock::new(l, curr_block, t));
 
                         curr_block = Vec::new();
                         curr_section = String::new();
@@ -111,11 +115,7 @@ impl Program {
                     curr_section
                 };
 
-                let b = BasicBlock {
-                    label: l,
-                    block: curr_block,
-                    terminator: Terminator::Passthrough,
-                };
+                let b = BasicBlock::new(l, curr_block, Terminator::Passthrough);
 
                 basic_block.push(b);
             }
