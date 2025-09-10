@@ -7,6 +7,11 @@ A compiler written in Rust for for [BRIL](https://github.com/sampsyo/bril) (Big 
 - [x] code block and control flow graph generation
 - [ ] dead code elimination
 
+## How to use Turnt
+
+turn --save simple.bril
+turn simple.bril
+
 # Runbook
 
 ## Installation

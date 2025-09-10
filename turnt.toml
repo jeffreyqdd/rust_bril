@@ -1,2 +1,12 @@
 [envs.transform]
 command = "cargo run -- --transform-print < {filename} | brilirs"
+
+[envs.baseline]
+command = "brili2json < {filename} | brilirs"
+result = "-"
+
+[envs.optimize]
+command = "cargo run -- -O < {filename} | brilirs"
+result = "-"
+
+

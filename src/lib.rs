@@ -1,4 +1,5 @@
 pub mod blocks;
+pub mod optimizations;
 pub mod program;
 
 pub fn transform_print(mut program: program::Program) -> program::Program {
