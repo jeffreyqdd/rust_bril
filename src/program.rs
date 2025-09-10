@@ -1,6 +1,6 @@
 use std::{
     fs::File,
-    io::{self, BufReader, Read},
+    io::{self, BufReader, Read, Write},
 };
 
 use serde;
@@ -116,7 +116,31 @@ pub enum Literal {
 }
 
 impl Program {
+    /// Read a file with either .json or .bril extension and deserialize it into a Program. If the file extension is .bril
+    /// then this function will spawn a child process to run the command bril2json and get the output and deserialize that.
     pub fn from_file(file_path: &str) -> Self {
+        if file_path.ends_with(".bril") {
+            let mut child = std::process::Command::new("bril2json")
+                .stdin(std::process::Stdio::piped())
+                .stdout(std::process::Stdio::piped())
+                .spawn()
+                .unwrap();
+
+            child
+                .stdin
+                .as_mut()
+                .expect("failed to open stdin")
+                .write_all(
+                    std::fs::read(file_path)
+                        .expect("could not read file")
+                        .as_slice(),
+                )
+                .unwrap();
+            let output = child.wait_with_output().unwrap();
+            let program = serde_json::from_str(&String::from_utf8(output.stdout).unwrap()).unwrap();
+            return program;
+        }
+
         let file = File::open(file_path).unwrap();
         let reader = BufReader::new(file);
         let program = serde_json::from_reader(reader).unwrap();

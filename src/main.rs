@@ -8,6 +8,10 @@ struct Args {
     #[arg(short, long)]
     file: Option<String>,
 
+    /// output file after running optimization passes (if omitted, write to stdout)
+    #[arg(short, long)]
+    output: Option<String>,
+
     /// lesson2: transform, which will add print statements before every `jmp` and `br` instruction (will write to stdout if no file is provided)
     #[clap(long, num_args = 0..=1)]
     transform_print: Option<Vec<String>>,
