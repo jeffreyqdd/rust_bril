@@ -70,6 +70,7 @@ fn main() {
             .map(|x| optimizations::dce::dce(x))
             .collect();
 
+        println!("{:#?}", cfg_graphs);
         Program::from(cfg_graphs).to_file("tmp.txt");
     }
 }

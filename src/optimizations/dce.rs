@@ -7,7 +7,15 @@ pub fn dce(mut cfg: blocks::CfgGraph) -> blocks::CfgGraph {
     // not referenced anywhere else
 
     let mut referenced_variables = std::collections::HashSet::new();
-    for basic_block in &mut cfg.blocks {
+
+    // for cfg.referenced_variables
+
+    for (idx, basic_block) in cfg.blocks.iter_mut().enumerate() {
+        referenced_variables.clear();
+        for i in &cfg.successor_references[idx] {
+            referenced_variables.insert(i.clone());
+        }
+
         let mut new_basic_block = vec![];
         for (_idx, instruction) in basic_block.block.iter().rev().enumerate() {
             // println!("checking instruction {:?}", instruction);
@@ -18,10 +26,15 @@ pub fn dce(mut cfg: blocks::CfgGraph) -> blocks::CfgGraph {
                         // only push if referenced
                         new_basic_block.push(instruction.clone());
                         // println!("pushing {:?}", instruction);
+                        println!("----------");
+                        println!("{:?}", referenced_variables);
+                        referenced_variables.remove(dest);
+                        println!("{:?}", referenced_variables);
                     }
                 }
                 program::Code::Value { dest, args, .. } => {
                     if referenced_variables.contains(dest) {
+                        referenced_variables.remove(dest);
                         for i in args.iter().flatten() {
                             referenced_variables.insert(i.clone());
                             // println!("referencing {:?}", i);
@@ -33,6 +46,7 @@ pub fn dce(mut cfg: blocks::CfgGraph) -> blocks::CfgGraph {
                     }
                 }
                 program::Code::Effect { args, .. } => {
+                    new_basic_block.push(instruction.clone());
                     for i in args.iter().flatten() {
                         referenced_variables.insert(i.clone());
                         // println!("referencing {:?}", i);
@@ -40,7 +54,6 @@ pub fn dce(mut cfg: blocks::CfgGraph) -> blocks::CfgGraph {
 
                     // push because effect operations have "side effects"
                     // println!("pushing {:?}", instruction);
-                    new_basic_block.push(instruction.clone());
                 }
             }
         }
