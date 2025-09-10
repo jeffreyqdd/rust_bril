@@ -1,6 +1,6 @@
 use std::{collections::HashMap, fs::File};
 
-use crate::program::{Code, EffectOp, Program};
+use crate::program::{Code, EffectOp, Function, Program};
 use serde;
 use serde_json;
 
@@ -20,12 +20,51 @@ pub struct BasicBlock {
     pub label: String,
     pub block: Vec<Code>,
     pub terminator: Terminator,
+    pub external_references: Vec<String>,
 }
 
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
 pub struct FunctionBlock {
     pub name: String,
+    pub header: Function,
     pub basic_blocks: Vec<BasicBlock>,
+}
+
+impl BasicBlock {
+    fn new(label: String, block: Vec<Code>, terminator: Terminator) -> Self {
+        // since we know all the code that's going in the basic block, we can find
+        // variables that do not have an assignment and put that in the list of
+        // external_references
+        let mut declared_variables = std::collections::HashSet::new();
+        let mut external_references = Vec::new();
+        for code in &block {
+            match code {
+                Code::Label { .. } => continue,
+                Code::Constant { dest, .. } => {
+                    declared_variables.insert(dest);
+                }
+                Code::Value { dest, args, .. } => {
+                    declared_variables.insert(dest);
+                    args.iter()
+                        .flatten()
+                        .filter(|v| !declared_variables.contains(v))
+                        .for_each(|v| external_references.push(v.clone()));
+                }
+                Code::Effect { args, .. } => args
+                    .iter()
+                    .flatten()
+                    .filter(|v| !declared_variables.contains(v))
+                    .for_each(|v| external_references.push(v.clone())),
+            }
+        }
+
+        Self {
+            label,
+            block,
+            terminator,
+            external_references: external_references,
+        }
+    }
 }
 
 impl Program {
@@ -54,11 +93,7 @@ impl Program {
                             curr_section
                         };
 
-                        let b = BasicBlock {
-                            label: l,
-                            block: curr_block,
-                            terminator: Terminator::Passthrough,
-                        };
+                        let b = BasicBlock::new(l, curr_block, Terminator::Passthrough);
 
                         basic_block.push(b);
 
@@ -88,11 +123,7 @@ impl Program {
                         };
 
                         curr_block.push(code.clone());
-                        basic_block.push(BasicBlock {
-                            label: l,
-                            block: curr_block,
-                            terminator: t,
-                        });
+                        basic_block.push(BasicBlock::new(l, curr_block, t));
 
                         curr_block = Vec::new();
                         curr_section = String::new();
@@ -111,32 +142,37 @@ impl Program {
                     curr_section
                 };
 
-                let b = BasicBlock {
-                    label: l,
-                    block: curr_block,
-                    terminator: Terminator::Passthrough,
-                };
+                let b = BasicBlock::new(l, curr_block, Terminator::Passthrough);
 
                 basic_block.push(b);
             }
 
             ret.push(FunctionBlock {
                 name: function.name.clone(),
+                header: function.clone(),
                 basic_blocks: basic_block,
             });
         }
 
         ret
     }
+
+    pub fn from(cfg: Vec<CfgGraph>) -> Self {
+        Program {
+            functions: cfg.into_iter().map(|x| x.into_function()).collect(),
+        }
+    }
 }
 
 #[allow(dead_code)]
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
 pub struct CfgGraph {
+    pub function_header: Function,
     pub function_name: String,
     pub blocks: Vec<BasicBlock>,
     pub edges: Vec<Vec<usize>>, // edges[i] = successors of block i
     pub label_map: HashMap<String, usize>, // map label -> block index
+    pub successor_references: Vec<Vec<String>>, // successors of this block will use "*this*" variable name
 }
 
 impl CfgGraph {
@@ -173,12 +209,55 @@ impl CfgGraph {
             }
         }
 
+        // for now, need to reverse successor relationship into ancestor relationship
+        // so can easily propagate upwards external references
+        let mut ancestor = vec![Vec::new(); function_block.basic_blocks.len()];
+        for (parent, children) in edges.iter().enumerate() {
+            for i in children {
+                ancestor[*i].push(parent);
+            }
+        }
+
+        // propagate upwards
+        let mut successor_references = vec![Vec::new(); function_block.basic_blocks.len()];
+        for (block_id, basic_block) in function_block.basic_blocks.iter().enumerate() {
+            for variable in &basic_block.external_references {
+                let mut visited = std::collections::HashSet::new();
+                let mut queue = std::collections::VecDeque::new();
+
+                for i in &ancestor[block_id] {
+                    queue.push_back(i);
+                }
+
+                while !queue.is_empty() {
+                    let node = queue.pop_front().unwrap();
+                    if visited.contains(&node) {
+                        continue;
+                    }
+
+                    visited.insert(node);
+                    successor_references[*node].push(variable.clone());
+
+                    for i in &ancestor[*node] {
+                        queue.push_back(i);
+                    }
+                }
+            }
+        }
+
         CfgGraph {
-            function_name: function_block.name.clone(),
+            function_header: function_block.header.clone(),
+            function_name: function_block.name.clone(), // for backwards compatibility sadge
             blocks: function_block.basic_blocks.clone(),
             edges,
             label_map,
+            successor_references,
         }
+    }
+
+    pub fn into_function(mut self) -> Function {
+        self.function_header.instrs = self.blocks.into_iter().map(|x| x.block).flatten().collect();
+        self.function_header
     }
 
     #[allow(dead_code)]

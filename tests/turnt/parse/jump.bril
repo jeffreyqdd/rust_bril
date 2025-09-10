@@ -1,0 +1,7 @@
+@main() {
+    literal_3: int = const 3;
+    jmp .sadness;
+    literal_3: int = const 3;
+.sadness:
+    print literal_3;
+} 
