@@ -69,6 +69,26 @@ pub enum Code {
         #[serde(skip_serializing_if = "Option::is_none")]
         labels: Option<Vec<String>>,
     },
+
+    Memory {
+        op: MemoryOp,
+        #[serde(skip_serializing_if = "Option::is_none")]
+        args: Option<Vec<String>>,
+        #[serde(skip_serializing_if = "Option::is_none")]
+        dest: Option<String>,
+        #[serde(rename = "type")]
+        ptr_type: Option<Type>,
+    },
+}
+
+#[derive(serde::Deserialize, serde::Serialize, Debug, Clone, Copy)]
+#[serde(rename_all = "lowercase")]
+pub enum MemoryOp {
+    Alloc,
+    Free,
+    Store,
+    Load,
+    PtrAdd,
 }
 
 #[derive(serde::Deserialize, serde::Serialize, Debug, Clone, Copy)]
@@ -118,30 +138,35 @@ pub enum Literal {
 impl Program {
     /// Read a file with either .json or .bril extension and deserialize it into a Program. If the file extension is .bril
     /// then this function will spawn a child process to run the command bril2json and get the output and deserialize that.
-    pub fn from_file(file_path: &str) -> Self {
-        if file_path.ends_with(".bril") {
-            let mut child = std::process::Command::new("bril2json")
-                .stdin(std::process::Stdio::piped())
-                .stdout(std::process::Stdio::piped())
-                .spawn()
-                .unwrap();
+    fn spawn_process_and_get_output(process: &str, file_name: &str) -> std::process::Output {
+        let mut child = std::process::Command::new(process)
+            .stdin(std::process::Stdio::piped())
+            .stdout(std::process::Stdio::piped())
+            .spawn()
+            .unwrap();
 
-            child
-                .stdin
-                .as_mut()
-                .expect("failed to open stdin")
-                .write_all(
-                    std::fs::read(file_path)
-                        .expect("could not read file")
-                        .as_slice(),
-                )
-                .unwrap();
-            let output = child.wait_with_output().unwrap();
+        child
+            .stdin
+            .as_mut()
+            .expect("failed to open stdin")
+            .write_all(
+                std::fs::read(file_name)
+                    .expect("could not read file")
+                    .as_slice(),
+            )
+            .unwrap();
+
+        child.wait_with_output().unwrap()
+    }
+
+    pub fn from_file(file_name: &str) -> Self {
+        if file_name.ends_with(".bril") {
+            let output = Self::spawn_process_and_get_output("bril2json", file_name);
             let program = serde_json::from_str(&String::from_utf8(output.stdout).unwrap()).unwrap();
             return program;
         }
 
-        let file = File::open(file_path).unwrap();
+        let file = File::open(file_name).unwrap();
         let reader = BufReader::new(file);
         let program = serde_json::from_reader(reader).unwrap();
         program
@@ -165,8 +190,19 @@ impl Program {
     }
 
     #[allow(dead_code)]
-    pub fn to_file(&self, file_path: &str) {
-        let file = File::create(file_path).unwrap();
+    pub fn to_file(&self, file_name: &str) {
+        // if the file extension ends in .bril, write to tmp file, convert to text, and then write to file
+        if file_name.ends_with(".bril") {
+            let tmp_file = tempfile::NamedTempFile::new().unwrap();
+            let tmp_file_path = tmp_file.path().to_str().unwrap();
+            std::fs::write(tmp_file_path, self.to_string()).unwrap();
+
+            let output = Self::spawn_process_and_get_output("bril2txt", tmp_file_path);
+            std::fs::write(file_name, output.stdout).unwrap();
+            return;
+        }
+
+        let file = File::create(file_name).unwrap();
         serde_json::to_writer_pretty(file, self).unwrap();
     }
 }

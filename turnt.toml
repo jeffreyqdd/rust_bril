@@ -1,5 +1,5 @@
 [envs.transform]
-command = "cargo run -- --transform-print < {filename} | brilirs"
+command = "cargo run --release --quiet -- -f {filename} --transform-print | brilirs"
 
 [envs.baseline]
 command = "brili2json < {filename} | brilirs"
@@ -10,3 +10,17 @@ command = "cargo run -- -O < {filename} | brilirs"
 result = "-"
 
 
+# For parsing tests, compare converting from bril to json and back results in the same program
+# as bril2txt
+[envs.parse]
+command = "cargo run --release --quiet -- -f {filename} | bril2txt"
+
+[envs.parse_baseline]
+command = "bril2json < {filename} | bril2txt"
+
+# For dce tests, compare result of optimizing to running brilirs on the unoptimized code
+[envs.dce]
+command = "cargo run --release --quiet -- -f {filename} --local | brilirs"
+
+[envs.dce_baseline]
+command = "bril2json < {filename} | brilirs"

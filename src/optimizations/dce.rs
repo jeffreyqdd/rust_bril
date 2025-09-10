@@ -26,10 +26,7 @@ pub fn dce(mut cfg: blocks::CfgGraph) -> blocks::CfgGraph {
                         // only push if referenced
                         new_basic_block.push(instruction.clone());
                         // println!("pushing {:?}", instruction);
-                        println!("----------");
-                        println!("{:?}", referenced_variables);
                         referenced_variables.remove(dest);
-                        println!("{:?}", referenced_variables);
                     }
                 }
                 program::Code::Value { dest, args, .. } => {
@@ -54,6 +51,16 @@ pub fn dce(mut cfg: blocks::CfgGraph) -> blocks::CfgGraph {
 
                     // push because effect operations have "side effects"
                     // println!("pushing {:?}", instruction);
+                }
+                program::Code::Memory { args, dest, .. } => {
+                    if referenced_variables.contains(dest.as_ref().unwrap()) {
+                        referenced_variables.remove(dest.as_ref().unwrap());
+                        for i in args.iter().flatten() {
+                            referenced_variables.insert(i.clone());
+                        }
+
+                        new_basic_block.push(instruction.clone());
+                    }
                 }
             }
         }
