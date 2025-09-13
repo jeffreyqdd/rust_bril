@@ -1,4 +1,4 @@
-#ARGS: 1500
+# ARGS: 1500
 @main(depth: int) {
   zero: int = const 0;
   cond: bool = eq depth zero;

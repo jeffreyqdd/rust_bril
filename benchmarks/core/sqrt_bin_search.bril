@@ -1,4 +1,4 @@
-#ARGS: 37454400 0 37454400
+# ARGS: 37454400 0 37454400
 @main(x: int, min_guess: int, max_guess: int) {
   v0: int = id min_guess;
   v1: int = const 1;
