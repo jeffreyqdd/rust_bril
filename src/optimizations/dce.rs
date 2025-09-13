@@ -1,3 +1,4 @@
+/// Module for dead code elimination, make sure to run after local variable numbering
 use std::vec;
 
 use crate::{blocks, program};
@@ -10,7 +11,7 @@ pub fn dce(mut cfg: blocks::CfgGraph) -> blocks::CfgGraph {
 
     // for cfg.referenced_variables
 
-    for (idx, basic_block) in cfg.blocks.iter_mut().enumerate() {
+    for (idx, basic_block) in cfg.function.basic_blocks.iter_mut().enumerate() {
         referenced_variables.clear();
         for i in &cfg.successor_references[idx] {
             referenced_variables.insert(i.clone());

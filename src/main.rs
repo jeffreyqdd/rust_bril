@@ -63,6 +63,7 @@ fn main() {
         let cfg_graphs: Vec<CfgGraph> = function_blocks
             .iter()
             .map(|x| CfgGraph::from(&x))
+            .map(|x| optimizations::lvn::lvn(x))
             .map(|x| optimizations::dce::dce(x))
             .collect();
 

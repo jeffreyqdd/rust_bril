@@ -40,7 +40,7 @@ pub enum Code {
     },
     Constant {
         // TODO: figure out if can fix this to be always "const"
-        op: String,
+        op: ConstantOp,
         dest: String,
         #[serde(rename = "type")]
         constant_type: Type,
@@ -48,7 +48,7 @@ pub enum Code {
     },
     Value {
         // TODO: replace string op with ValueOp enums
-        op: String,
+        op: ValueOp,
         dest: String,
         #[serde(rename = "type")]
         value_type: Type,
@@ -81,7 +81,50 @@ pub enum Code {
     },
 }
 
-#[derive(serde::Deserialize, serde::Serialize, Debug, Clone, Copy)]
+#[derive(serde::Deserialize, serde::Serialize, Debug, Clone, Copy, PartialEq, Eq, Hash)]
+#[serde(rename_all = "lowercase")]
+pub enum ConstantOp {
+    Const,
+}
+
+#[derive(serde::Deserialize, serde::Serialize, Debug, Clone, Copy, PartialEq, Eq, Hash)]
+#[serde(rename_all = "lowercase")]
+pub enum ValueOp {
+    Add,
+    Sub,
+    Div,
+    Mul,
+    Eq,
+    Lt,
+    Gt,
+    Le,
+    Ge,
+    Not,
+    And,
+    Or,
+    Id,
+    Fadd,
+    Fsub,
+    Fdiv,
+    Fmul,
+    Feq,
+    Flt,
+    Fgt,
+    Fle,
+    Fge,
+    Ceq,
+    Clt,
+    Cle,
+    Cgt,
+    Cge,
+    Char2int,
+    Int2char,
+    Float2int,
+    Int2float,
+    Call,
+}
+
+#[derive(serde::Deserialize, serde::Serialize, Debug, Clone, Copy, PartialEq, Eq, Hash)]
 #[serde(rename_all = "lowercase")]
 pub enum MemoryOp {
     Alloc,
@@ -91,17 +134,17 @@ pub enum MemoryOp {
     PtrAdd,
 }
 
-#[derive(serde::Deserialize, serde::Serialize, Debug, Clone, Copy)]
+#[derive(serde::Deserialize, serde::Serialize, Debug, Clone, Copy, PartialEq, Eq, Hash)]
 #[serde(rename_all = "lowercase")]
 pub enum EffectOp {
     Jmp,
     Br,
-    Call,
     Ret,
+    Call, // important, call can be both "effect" and "value op"
     Print,
 }
 
-#[derive(serde::Deserialize, serde::Serialize, Debug, Clone)]
+#[derive(serde::Deserialize, serde::Serialize, Debug, Clone, PartialEq, Eq, Hash)]
 #[serde(rename_all = "lowercase")]
 pub enum Type {
     Int,
@@ -131,8 +174,27 @@ pub struct RowCol {
 pub enum Literal {
     Int(i64),
     Bool(bool),
+    // force Eq for f64
     Float(f64),
     Char(char),
+}
+
+impl PartialEq for Literal {
+    fn eq(&self, rhs: &Self) -> bool {
+        match (self, rhs) {
+            (Self::Int(lhs), Self::Int(rhs)) => lhs == rhs,
+            (Self::Bool(lhs), Self::Bool(rhs)) => lhs == rhs,
+            (Self::Float(lhs), Self::Float(rhs)) => lhs.to_le_bytes() == rhs.to_le_bytes(),
+            (Self::Char(lhs), Self::Char(rhs)) => lhs == rhs,
+            _ => false,
+        }
+    }
+}
+impl Eq for Literal {}
+impl std::hash::Hash for Literal {
+    fn hash<H: std::hash::Hasher>(&self, state: &mut H) {
+        core::mem::discriminant(self).hash(state);
+    }
 }
 
 impl Program {

@@ -9,18 +9,23 @@ result = "-"
 command = "cargo run -- -O < {filename} | brilirs"
 result = "-"
 
-
-# For parsing tests, compare converting from bril to json and back results in the same program
-# as bril2txt
+# For parsing tests, compare converting from bril to json and back with no optimizations results 
+# in the same program as bril2txt 
 [envs.parse]
 command = "cargo run --release --quiet -- -f {filename} | bril2txt"
 
 [envs.parse_baseline]
 command = "bril2json < {filename} | bril2txt"
 
-# For dce tests, compare result of optimizing to running brilirs on the unoptimized code
-[envs.dce]
+# For dce & lvn tests, compare result of optimizing to running brilirs on the unoptimized code
+[envs.dce_lvn]
 command = "cargo run --release --quiet -- -f {filename} --local | brilirs"
 
-[envs.dce_baseline]
+[envs.dce_lvn_baseline]
 command = "bril2json < {filename} | brilirs"
+
+# For comprehensive sanity check, compare the result of parsing and running all the benchmarks
+# inside the benchmark directory and ensure that the results are the same among our parsed
+# version and the accepted bril interpreter on the original file
+[envs.bench_baseline]
+command = "bril2json < {filename} | brilirs $(awk '/^# ARGS:/ {for (i=3; i<=NF; i++) print $i}' ./benchmarks/core/bin-search.bril)"
