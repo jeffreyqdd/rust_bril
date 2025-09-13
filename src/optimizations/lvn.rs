@@ -79,7 +79,9 @@ impl Mangling {
 enum Operation {
     Value(ValueOp),
     Memory(MemoryOp),
+    #[allow(dead_code)]
     Effect(EffectOp),
+    #[allow(dead_code)]
     Constant(ConstantOp),
 }
 
@@ -100,6 +102,7 @@ enum CanonicalHome {
 
 trait SemanticalReasononing: std::fmt::Debug {
     fn is_commutative(&self, operation: &Operation) -> bool;
+    fn is_copy(&self, operation: &Operation) -> bool;
 }
 
 #[derive(Debug)]
@@ -119,9 +122,16 @@ impl SemanticalReasononing for BrilSemantics {
                 | ValueOp::Ceq => true,
                 _ => false,
             },
-            Operation::Memory(memory_op) => false,
-            Operation::Effect(effect_op) => false,
-            Operation::Constant(constant_op) => false,
+            Operation::Memory(_) => false,
+            Operation::Effect(_) => false,
+            Operation::Constant(_) => false,
+        }
+    }
+
+    fn is_copy(&self, operation: &Operation) -> bool {
+        match operation {
+            Operation::Value(ValueOp::Id) => true,
+            _ => false,
         }
     }
 }
@@ -214,11 +224,15 @@ impl LocalValueNumberingTable {
                 if self.semantical_reasoning.is_commutative(op) {
                     new_items.sort();
                 }
+
+                if self.semantical_reasoning.is_copy(op) {
+                    // TODO: semantic reasoning
+                }
+
                 Expr::Expr(t.clone(), op.clone(), new_items)
             }
         };
 
-        // println!("expr: {:?}", expr);
         // TODO: This is stupid; fix it for later
         if let Some(abstract_variable) = self.table.clone().get(&semantic_expr) {
             let ret = match &self.canonical_home[*abstract_variable] {
