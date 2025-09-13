@@ -3,7 +3,7 @@ use std::collections::HashMap;
 use std::vec::Vec;
 use uuid::Uuid;
 
-use crate::program::{Code, ConstantOp, Literal, MemoryOp, Type, ValueOp};
+use crate::program::{Code, ConstantOp, EffectOp, Literal, MemoryOp, Type, ValueOp};
 
 pub fn lvn(mut cfg: crate::blocks::CfgGraph) -> crate::blocks::CfgGraph {
     cfg.function.basic_blocks = cfg
@@ -79,6 +79,8 @@ impl Mangling {
 enum Operation {
     Value(ValueOp),
     Memory(MemoryOp),
+    Effect(EffectOp),
+    Constant(ConstantOp),
 }
 
 #[derive(Debug, PartialEq, Eq, Hash, Clone)]
@@ -96,6 +98,34 @@ enum CanonicalHome {
     Variable(String),
 }
 
+trait SemanticalReasononing: std::fmt::Debug {
+    fn is_commutative(&self, operation: &Operation) -> bool;
+}
+
+#[derive(Debug)]
+struct BrilSemantics;
+impl SemanticalReasononing for BrilSemantics {
+    fn is_commutative(&self, operation: &Operation) -> bool {
+        match operation {
+            Operation::Value(value_op) => match value_op {
+                ValueOp::And
+                | ValueOp::Or
+                | ValueOp::Add
+                | ValueOp::Mul
+                | ValueOp::Eq
+                | ValueOp::Fadd
+                | ValueOp::Fmul
+                | ValueOp::Feq
+                | ValueOp::Ceq => true,
+                _ => false,
+            },
+            Operation::Memory(memory_op) => false,
+            Operation::Effect(effect_op) => false,
+            Operation::Constant(constant_op) => false,
+        }
+    }
+}
+
 #[derive(Debug)]
 struct LocalValueNumberingTable {
     // mangles variable names coming in and out of Canonical Home
@@ -109,6 +139,9 @@ struct LocalValueNumberingTable {
 
     /// maps id to ch
     canonical_home: Vec<CanonicalHome>,
+
+    /// semantical processing of arguments
+    semantical_reasoning: Box<dyn SemanticalReasononing>,
 }
 
 impl LocalValueNumberingTable {
@@ -118,6 +151,7 @@ impl LocalValueNumberingTable {
             cloud: HashMap::new(),
             table: HashMap::new(),
             canonical_home: vec![],
+            semantical_reasoning: Box::new(BrilSemantics {}),
         }
     }
 
@@ -171,8 +205,22 @@ impl LocalValueNumberingTable {
         // destination should be mangled, but care must be taken to avoid trouble in the following case:
         // n = add n n
 
+        // // take expr and sort args list if commutative
+        // let semantic_expr = expr.clone();
+        let semantic_expr = match expr {
+            Expr::ConstExpr(..) => expr.clone(),
+            Expr::Expr(t, op, items) => {
+                let mut new_items = items.clone();
+                if self.semantical_reasoning.is_commutative(op) {
+                    new_items.sort();
+                }
+                Expr::Expr(t.clone(), op.clone(), new_items)
+            }
+        };
+
         // println!("expr: {:?}", expr);
-        if let Some(abstract_variable) = self.table.get(expr) {
+        // TODO: This is stupid; fix it for later
+        if let Some(abstract_variable) = self.table.clone().get(&semantic_expr) {
             let ret = match &self.canonical_home[*abstract_variable] {
                 CanonicalHome::ConstExpr(t, l, _) => Some(Code::Constant {
                     op: ConstantOp::Const,
@@ -183,7 +231,7 @@ impl LocalValueNumberingTable {
                 CanonicalHome::Variable(m) => Some(Code::Value {
                     op: ValueOp::Id,
                     dest: dest.to_owned(),
-                    value_type: match &expr {
+                    value_type: match &semantic_expr {
                         Expr::ConstExpr(t, _) => t.clone(),
                         Expr::Expr(t, _, _) => t.clone(),
                     },
@@ -197,24 +245,31 @@ impl LocalValueNumberingTable {
                 }),
             };
 
-            // the expression was computed before
+            // the semantic_expression was computed before
+            let exists = self.mangler.exists(&dest);
             let mangled = self.mangler.mangle(&dest);
-            // self.canonical_home.push(canonical_expr);
+            // self.canonical_home.push(canonical_semantic_expr);
             // let id = self.canonical_home.len() - 1;
             // self.cloud.insert(mangled.clone(), id);
             self.cloud.insert(mangled.clone(), *abstract_variable);
 
-            // update variable name in ch
-            if let CanonicalHome::ConstExpr(t, l, _) = &self.canonical_home[*abstract_variable] {
-                self.canonical_home[*abstract_variable] =
-                    CanonicalHome::ConstExpr(t.clone(), l.clone(), mangled.clone());
-            } else {
-                self.canonical_home[*abstract_variable] = CanonicalHome::Variable(mangled.clone());
+            // update variable name in ch only if it's the same
+            // if dest is the same as its arguments, we should update the ch.
+            if exists {
+                if let CanonicalHome::ConstExpr(t, l, _) = &self.canonical_home[*abstract_variable]
+                {
+                    self.canonical_home[*abstract_variable] =
+                        CanonicalHome::ConstExpr(t.clone(), l.clone(), mangled.clone());
+                } else {
+                    self.canonical_home[*abstract_variable] =
+                        CanonicalHome::Variable(mangled.clone());
+                }
             }
+            // println!("{:#?}", self);
 
             return ret;
         } else {
-            // the expression is new
+            // the semantic_expression is new
 
             // is the variable new? If the variable is not new, delete old variable mapping.
             if self.mangler.exists(&dest) {
@@ -224,7 +279,7 @@ impl LocalValueNumberingTable {
             }
 
             let mangled = self.mangler.mangle(&dest);
-            let canonical_expr = match &expr {
+            let canonical_semantic_expr = match &semantic_expr {
                 Expr::ConstExpr(t, l) => {
                     // ok to mangle destination because constant has no variable dependencies
                     CanonicalHome::ConstExpr(t.clone(), l.clone(), mangled.clone())
@@ -232,10 +287,10 @@ impl LocalValueNumberingTable {
                 Expr::Expr(_, _, _) => CanonicalHome::Variable(mangled.clone()),
             };
 
-            self.canonical_home.push(canonical_expr);
+            self.canonical_home.push(canonical_semantic_expr);
             let id = self.canonical_home.len() - 1;
             self.cloud.insert(mangled.clone(), id);
-            self.table.insert(expr.clone(), id);
+            self.table.insert(semantic_expr.clone(), id);
 
             None
         }
@@ -248,7 +303,7 @@ fn lvn_on_block(mut basic_block: crate::blocks::BasicBlock) -> crate::blocks::Ba
     let mut new_block = vec![];
     // println!("======================= new block ==============");
     for instr in &basic_block.block {
-        // println!("{:?}", instr);
+        // println!("instr: {:?}", instr);
         match &instr {
             Code::Label { .. } | Code::Noop { .. } => new_block.push(instr.clone()),
             Code::Constant {
