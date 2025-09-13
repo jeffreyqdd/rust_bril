@@ -79,6 +79,15 @@ pub enum Code {
         #[serde(rename = "type")]
         ptr_type: Option<Type>,
     },
+    Noop {
+        op: Noop,
+    },
+}
+
+#[derive(serde::Deserialize, serde::Serialize, Debug, Clone, Copy, PartialEq, Eq, Hash)]
+#[serde(rename_all = "lowercase")]
+pub enum Noop {
+    Nop,
 }
 
 #[derive(serde::Deserialize, serde::Serialize, Debug, Clone, Copy, PartialEq, Eq, Hash)]
@@ -119,8 +128,8 @@ pub enum ValueOp {
     Cge,
     Char2int,
     Int2char,
-    Float2int,
-    Int2float,
+    Float2bits,
+    Bits2float,
     Call,
 }
 

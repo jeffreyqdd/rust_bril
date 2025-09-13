@@ -28,4 +28,10 @@ command = "bril2json < {filename} | brilirs"
 # inside the benchmark directory and ensure that the results are the same among our parsed
 # version and the accepted bril interpreter on the original file
 [envs.bench_baseline]
-command = "bril2json < {filename} | brilirs $(awk '/^# ARGS:/ {for (i=3; i<=NF; i++) print $i}' ./benchmarks/core/bin-search.bril)"
+command = "bril2json < {filename} | brilirs $(awk '/^# ARGS:/ {{for (i=3; i<=NF; i++) print $i}}' {filename})"
+
+[envs.bench_check]
+command = "./target/release/rust_bril -f {filename} | brilirs $(awk '/^# ARGS:/ {{for (i=3; i<=NF; i++) print $i}}' {filename})"
+
+[envs.bench_local]
+command = "./target/release/rust_bril --local -f {filename} | brilirs $(awk '/^# ARGS:/ {{for (i=3; i<=NF; i++) print $i}}' {filename})"

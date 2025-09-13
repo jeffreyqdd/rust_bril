@@ -40,6 +40,7 @@ impl BasicBlock {
         let mut external_references = Vec::new();
         for code in &block {
             match code {
+                Code::Noop { .. } => continue,
                 Code::Label { .. } => continue,
                 Code::Constant { dest, .. } => {
                     declared_variables.insert(dest.clone());

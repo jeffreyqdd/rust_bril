@@ -244,7 +244,7 @@ fn lvn_on_block(
     for instr in &basic_block.block {
         // println!("{:?}", instr);
         match &instr {
-            Code::Label { .. } => new_block.push(instr.clone()),
+            Code::Label { .. } | Code::Noop { .. } => new_block.push(instr.clone()),
             Code::Constant {
                 dest,
                 constant_type,

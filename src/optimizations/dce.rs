@@ -21,7 +21,9 @@ pub fn dce(mut cfg: blocks::CfgGraph) -> blocks::CfgGraph {
         for (_idx, instruction) in basic_block.block.iter().rev().enumerate() {
             // println!("checking instruction {:?}", instruction);
             match instruction {
-                program::Code::Label { .. } => new_basic_block.push(instruction.clone()),
+                program::Code::Label { .. } | program::Code::Noop { .. } => {
+                    new_basic_block.push(instruction.clone())
+                }
                 program::Code::Constant { dest, .. } => {
                     if referenced_variables.contains(dest) {
                         // only push if referenced
