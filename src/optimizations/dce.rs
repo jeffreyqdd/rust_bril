@@ -56,6 +56,14 @@ pub fn dce(mut cfg: blocks::CfgGraph) -> blocks::CfgGraph {
                     // println!("pushing {:?}", instruction);
                 }
                 program::Code::Memory { args, dest, .. } => {
+                    if dest.is_none() {
+                        for i in args.iter().flatten() {
+                            referenced_variables.insert(i.clone());
+                        }
+                        new_basic_block.push(instruction.clone());
+                        continue;
+                    }
+
                     if referenced_variables.contains(dest.as_ref().unwrap()) {
                         referenced_variables.remove(dest.as_ref().unwrap());
                         for i in args.iter().flatten() {

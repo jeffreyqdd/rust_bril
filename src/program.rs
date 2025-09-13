@@ -161,6 +161,7 @@ pub enum Type {
     Float,
     Char,
     Ptr(Box<Self>),
+    None,
 }
 
 #[derive(serde::Deserialize, serde::Serialize, Debug, Clone)]

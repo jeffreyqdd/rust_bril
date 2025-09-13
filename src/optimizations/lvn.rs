@@ -1,8 +1,6 @@
-use serde::de::value;
-use std::path::is_separator;
-use std::vec::Vec;
 /// Module for local value numbering, Capable of copy propagation, cse, and const expression folding
-use std::{collections::HashMap, env::var};
+use std::collections::HashMap;
+use std::vec::Vec;
 use uuid::Uuid;
 
 use crate::program::{Code, ConstantOp, EffectOp, Literal, MemoryOp, Type, ValueOp};
@@ -12,7 +10,7 @@ pub fn lvn(mut cfg: crate::blocks::CfgGraph) -> crate::blocks::CfgGraph {
         .function
         .basic_blocks
         .into_iter()
-        .map(|block| lvn_on_block(block, &vec![]))
+        .map(|block| lvn_on_block(block))
         .collect();
 
     cfg
@@ -74,10 +72,17 @@ impl Mangling {
 }
 
 #[derive(Debug, PartialEq, Eq, Hash, Clone)]
+/// Wrap operation in a unified enum
+///
+/// NOTE: EffectOperations should never be constructed since only their args need to be reprojected.
+/// They do not create any new variables that we should keep track of.
 enum Operation {
     Value(ValueOp),
     Memory(MemoryOp),
+    #[allow(dead_code)]
     Effect(EffectOp),
+    #[allow(dead_code)]
+    Constant(ConstantOp),
 }
 
 #[derive(Debug, PartialEq, Eq, Hash, Clone)]
@@ -95,6 +100,42 @@ enum CanonicalHome {
     Variable(String),
 }
 
+trait SemanticalReasononing: std::fmt::Debug {
+    fn is_commutative(&self, operation: &Operation) -> bool;
+    fn is_copy(&self, operation: &Operation) -> bool;
+}
+
+#[derive(Debug)]
+struct BrilSemantics;
+impl SemanticalReasononing for BrilSemantics {
+    fn is_commutative(&self, operation: &Operation) -> bool {
+        match operation {
+            Operation::Value(value_op) => match value_op {
+                ValueOp::And
+                | ValueOp::Or
+                | ValueOp::Add
+                | ValueOp::Mul
+                | ValueOp::Eq
+                | ValueOp::Fadd
+                | ValueOp::Fmul
+                | ValueOp::Feq
+                | ValueOp::Ceq => true,
+                _ => false,
+            },
+            Operation::Memory(_) => false,
+            Operation::Effect(_) => false,
+            Operation::Constant(_) => false,
+        }
+    }
+
+    fn is_copy(&self, operation: &Operation) -> bool {
+        match operation {
+            Operation::Value(ValueOp::Id) => true,
+            _ => false,
+        }
+    }
+}
+
 #[derive(Debug)]
 struct LocalValueNumberingTable {
     // mangles variable names coming in and out of Canonical Home
@@ -108,6 +149,9 @@ struct LocalValueNumberingTable {
 
     /// maps id to ch
     canonical_home: Vec<CanonicalHome>,
+
+    /// semantical processing of arguments
+    semantical_reasoning: Box<dyn SemanticalReasononing>,
 }
 
 impl LocalValueNumberingTable {
@@ -117,6 +161,7 @@ impl LocalValueNumberingTable {
             cloud: HashMap::new(),
             table: HashMap::new(),
             canonical_home: vec![],
+            semantical_reasoning: Box::new(BrilSemantics {}),
         }
     }
 
@@ -170,8 +215,26 @@ impl LocalValueNumberingTable {
         // destination should be mangled, but care must be taken to avoid trouble in the following case:
         // n = add n n
 
-        // println!("expr: {:?}", expr);
-        if let Some(abstract_variable) = self.table.get(expr) {
+        // // take expr and sort args list if commutative
+        // let semantic_expr = expr.clone();
+        let semantic_expr = match expr {
+            Expr::ConstExpr(..) => expr.clone(),
+            Expr::Expr(t, op, items) => {
+                let mut new_items = items.clone();
+                if self.semantical_reasoning.is_commutative(op) {
+                    new_items.sort();
+                }
+
+                if self.semantical_reasoning.is_copy(op) {
+                    // TODO: semantic reasoning
+                }
+
+                Expr::Expr(t.clone(), op.clone(), new_items)
+            }
+        };
+
+        // TODO: This is stupid; fix it for later
+        if let Some(abstract_variable) = self.table.clone().get(&semantic_expr) {
             let ret = match &self.canonical_home[*abstract_variable] {
                 CanonicalHome::ConstExpr(t, l, _) => Some(Code::Constant {
                     op: ConstantOp::Const,
@@ -182,7 +245,7 @@ impl LocalValueNumberingTable {
                 CanonicalHome::Variable(m) => Some(Code::Value {
                     op: ValueOp::Id,
                     dest: dest.to_owned(),
-                    value_type: match &expr {
+                    value_type: match &semantic_expr {
                         Expr::ConstExpr(t, _) => t.clone(),
                         Expr::Expr(t, _, _) => t.clone(),
                     },
@@ -196,16 +259,31 @@ impl LocalValueNumberingTable {
                 }),
             };
 
-            // the expression was computed before
+            // the semantic_expression was computed before
+            let exists = self.mangler.exists(&dest);
             let mangled = self.mangler.mangle(&dest);
-            // self.canonical_home.push(canonical_expr);
+            // self.canonical_home.push(canonical_semantic_expr);
             // let id = self.canonical_home.len() - 1;
             // self.cloud.insert(mangled.clone(), id);
             self.cloud.insert(mangled.clone(), *abstract_variable);
 
+            // update variable name in ch only if it's the same
+            // if dest is the same as its arguments, we should update the ch.
+            if exists {
+                if let CanonicalHome::ConstExpr(t, l, _) = &self.canonical_home[*abstract_variable]
+                {
+                    self.canonical_home[*abstract_variable] =
+                        CanonicalHome::ConstExpr(t.clone(), l.clone(), mangled.clone());
+                } else {
+                    self.canonical_home[*abstract_variable] =
+                        CanonicalHome::Variable(mangled.clone());
+                }
+            }
+            // println!("{:#?}", self);
+
             return ret;
         } else {
-            // the expression is new
+            // the semantic_expression is new
 
             // is the variable new? If the variable is not new, delete old variable mapping.
             if self.mangler.exists(&dest) {
@@ -215,7 +293,7 @@ impl LocalValueNumberingTable {
             }
 
             let mangled = self.mangler.mangle(&dest);
-            let canonical_expr = match &expr {
+            let canonical_semantic_expr = match &semantic_expr {
                 Expr::ConstExpr(t, l) => {
                     // ok to mangle destination because constant has no variable dependencies
                     CanonicalHome::ConstExpr(t.clone(), l.clone(), mangled.clone())
@@ -223,26 +301,23 @@ impl LocalValueNumberingTable {
                 Expr::Expr(_, _, _) => CanonicalHome::Variable(mangled.clone()),
             };
 
-            self.canonical_home.push(canonical_expr);
+            self.canonical_home.push(canonical_semantic_expr);
             let id = self.canonical_home.len() - 1;
             self.cloud.insert(mangled.clone(), id);
-            self.table.insert(expr.clone(), id);
+            self.table.insert(semantic_expr.clone(), id);
 
             None
         }
     }
 }
 
-fn lvn_on_block(
-    mut basic_block: crate::blocks::BasicBlock,
-    successor_references: &std::vec::Vec<String>,
-) -> crate::blocks::BasicBlock {
+fn lvn_on_block(mut basic_block: crate::blocks::BasicBlock) -> crate::blocks::BasicBlock {
     let mut lvn_state = LocalValueNumberingTable::new();
 
     let mut new_block = vec![];
     // println!("======================= new block ==============");
     for instr in &basic_block.block {
-        // println!("{:?}", instr);
+        // println!("instr: {:?}", instr);
         match &instr {
             Code::Label { .. } | Code::Noop { .. } => new_block.push(instr.clone()),
             Code::Constant {
@@ -290,212 +365,81 @@ fn lvn_on_block(
                     });
                 }
             }
-            Code::Effect { .. } => new_block.push(instr.clone()),
-            Code::Memory { .. } => new_block.push(instr.clone()),
+            Code::Effect {
+                op,
+                args,
+                funcs,
+                labels,
+            } => {
+                if args.is_none() {
+                    new_block.push(instr.clone());
+                    continue;
+                }
+
+                // println!("mangler: {:?}", lvn_state.mangler);
+                // println!("cloud: {:?}", lvn_state.cloud);
+                // println!("ch: {:?}", lvn_state.canonical_home);
+                // println!("{:?}", instr);
+                if labels.is_some() {
+                    new_block.push(instr.clone());
+                    continue;
+                }
+
+                let concrete_args = args
+                    .as_ref()
+                    .expect("Should not be here because of args non none check")
+                    .clone();
+                let abstract_args = lvn_state.to_abstract_args_list(&concrete_args);
+                // println!("a {:?}", abstract_args);
+                let reprojected_args = lvn_state.from_abstract_args_list(&abstract_args);
+                // println!("b {:?}", abstract_args);
+
+                new_block.push(Code::Effect {
+                    op: op.clone(),
+                    args: Some(reprojected_args),
+                    funcs: funcs.clone(),
+                    labels: labels.clone(),
+                });
+            }
+            // Store, Alloc, and Free have side effects and must not be optimized
+            // We are left with Load and PtrAdd which can be processed
+            Code::Memory {
+                op,
+                args,
+                dest,
+                ptr_type,
+            } => match op {
+                MemoryOp::Alloc | MemoryOp::Free | MemoryOp::Store => new_block.push(instr.clone()),
+                MemoryOp::Load | MemoryOp::PtrAdd => {
+                    let concrete_args = args
+                        .as_ref()
+                        .expect("MemoryOp::Load type operations must have an args list")
+                        .clone();
+                    let abstract_args = lvn_state.to_abstract_args_list(&concrete_args);
+                    let expr = Expr::Expr(
+                        ptr_type.clone().expect("MemoryOp::Load must have type"),
+                        Operation::Memory(*op),
+                        abstract_args.clone(),
+                    );
+                    let before = Some(lvn_state.from_abstract_args_list(&abstract_args));
+                    if let Some(code) = lvn_state.register_expr(
+                        &expr,
+                        &dest.clone().expect("MemoryOp::Load must have destination"),
+                    ) {
+                        new_block.push(code);
+                    } else {
+                        new_block.push(Code::Memory {
+                            op: op.clone(),
+                            args: before,
+                            dest: dest.clone(),
+                            ptr_type: ptr_type.clone(),
+                        });
+                    }
+                }
+            },
         }
     }
 
     basic_block.block = new_block;
     basic_block
 }
-
-// fn lvn_on_block(
-//     mut basic_block: crate::blocks::BasicBlock,
-//     successor_references: &std::vec::Vec<String>,
-// ) -> crate::blocks::BasicBlock {
-//     let mut lvn_state = LocalValueNumberingTable::new();
-//     println!("============= starting block");
-
-//     let mut new_block = vec![];
-//     for instr in basic_block.block {
-//         // Step 1: convert the expression arguments to ids
-
-//         // Step 2: convert expression to Expr enum type
-
-//         // Step 3: check if we've seen this Expr before
-//         //     - if we have, we can substitute the expression with an `id` instruction to copy the value
-//         //     - if we haven't, we add it to the table, get the canonical id, mangle the variable name, and add it to cloud
-//         //       and canonical variable
-
-//         // Step 4: If we've computed this Expr before, we can replace the expression with the corresponding canonical variable
-
-//         // Step 5: If we haven't seen this Expr before, we can add it to the table and canonical home
-//         match &instr {
-//             Code::Label { .. } => new_block.push(instr.clone()),
-//             Code::Value {
-//                 op,
-//                 dest,
-//                 value_type,
-//                 args,
-//                 funcs,
-//                 labels,
-//             } => {
-//                 // Step 1: convert the expression arguments to ids
-//                 // println!("mangler: {:#?}", lvn_state.mangler);
-//                 println!("table: {:#?}", lvn_state.table);
-//                 // println!("cloud: {:#?}", lvn_state.cloud);
-//                 // println!("canonical_home: {:?}", lvn_state.canonical_home);
-//                 println!("instruction: {:?}", instr);
-//                 println!("mangling, {:#?} ", lvn_state.cloud);
-//                 println!("mangling, {:#?} ", lvn_state.mangler);
-//                 if let Some(real_args) = args {
-//                     let canonical_ids: Vec<usize> = real_args
-//                         .iter()
-//                         .map(|v| {
-//                             // println!("{}", v);
-//                             if let Some(id) = lvn_state.cloud.get(lvn_state.mangler.to_mangled(v)) {
-//                                 println!("existed");
-//                                 return id.clone();
-//                             } else {
-//                                 println!("mangling, {:?}", v);
-//                                 let m: &String = lvn_state.mangler.mangle(v);
-//                                 lvn_state
-//                                     .canonical_home
-//                                     .push(CanonicalHome::Variable(m.clone()));
-//                                 let id = lvn_state.canonical_home.len() - 1;
-//                                 lvn_state.cloud.insert(m.clone(), id);
-//                                 id
-//                             }
-//                         })
-//                         .collect();
-
-//                     // Step 2: convert expression to Expr enum type
-//                     let expr = Expr::Expr(Operation::Value(op.clone()), canonical_ids.clone());
-//                     println!("{:?} => {:?} => {:?}", instr, &canonical_ids, &expr);
-
-//                     // Step 3: check if we've seen this Expr before
-//                     if let Some(ci) = lvn_state.table.get(&expr) {
-//                         // if we have, we can substitute the expression with an `id` instruction to copy the value
-//                         let ch = lvn_state.canonical_home[*ci].clone();
-//                         let code = match ch {
-//                             CanonicalHome::ConstExpr(t, literal, _v) => Code::Constant {
-//                                 op: ConstantOp::Const,
-//                                 dest: dest.clone(),
-//                                 constant_type: t,
-//                                 value: literal,
-//                             },
-//                             CanonicalHome::Variable(s) => Code::Value {
-//                                 op: ValueOp::Id,
-//                                 dest: dest.clone(),
-//                                 value_type: value_type.clone(),
-//                                 args: Some(vec![lvn_state
-//                                     .mangler
-//                                     .from_mangled(&s)
-//                                     .expect(&format!("variable does not exist: {}", s))
-//                                     .clone()]),
-//                                 funcs: funcs.clone(),
-//                                 labels: labels.clone(),
-//                             },
-//                         };
-
-//                         // we do want to mangle the destination to point to id
-//                         let mangled = lvn_state.mangler.mangle(&dest);
-//                         lvn_state.cloud.insert(mangled.clone(), *ci);
-
-//                         new_block.push(code);
-//                     } else {
-//                         // if we haven't, we add it to the table, get the canonical id, mangle the variable name, and add it to cloud
-//                         // and canonical variable
-//                         // println!("haven't seen");
-//                         let before = Some(
-//                             canonical_ids
-//                                 .iter()
-//                                 .map(|id| match &lvn_state.canonical_home[*id] {
-//                                     CanonicalHome::ConstExpr(_, _literal, v) => {
-//                                         lvn_state.mangler.from_mangled(v).unwrap().clone()
-//                                     }
-//                                     CanonicalHome::Variable(v) => lvn_state
-//                                         .mangler
-//                                         .from_mangled(v)
-//                                         .expect(&format!("{:?}", v))
-//                                         .clone(),
-//                                 })
-//                                 .collect(),
-//                         );
-//                         let mangled = lvn_state.mangler.mangle(&dest);
-//                         lvn_state
-//                             .canonical_home
-//                             .push(CanonicalHome::Variable(mangled.clone()));
-//                         let id = lvn_state.canonical_home.len() - 1;
-//                         lvn_state.table.insert(expr, id);
-//                         lvn_state.cloud.insert(mangled.clone(), id);
-//                         new_block.push(Code::Value {
-//                             op: op.clone(),
-//                             dest: dest.clone(),
-//                             value_type: value_type.clone(),
-//                             args: before,
-//                             funcs: funcs.clone(),
-//                             labels: labels.clone(),
-//                         });
-//                     }
-//                 } else {
-//                     panic!("Value instruction must have args");
-//                 }
-//             }
-//             Code::Constant {
-//                 op,
-//                 dest,
-//                 constant_type,
-//                 value,
-//             } => {
-//                 // Step 1: convert the expression arguments to ids
-//                 // NOTE: because constant do not have arguments, we can skip this step
-
-//                 // Step 2: convert expression to Expr enum type
-//                 let expr = Expr::ConstExpr(constant_type.clone(), value.clone());
-
-//                 // Step 3: check if we've seen this Expr before
-//                 if let Some(ci) = lvn_state.table.get(&expr) {
-//                     // if we have, we can substitute the expression with an `id` instruction to copy the value
-//                     let ch = lvn_state.canonical_home[*ci].clone();
-//                     let code = match ch {
-//                         CanonicalHome::ConstExpr(t, literal, _v) => Code::Constant {
-//                             op: op.clone(),
-//                             dest: dest.clone(),
-//                             constant_type: t,
-//                             value: literal,
-//                         },
-//                         CanonicalHome::Variable(_) => {
-//                             panic!("canonical home of constant can never be a variable")
-//                         }
-//                     };
-
-//                     // we do want to mangle the destination to point to id
-//                     let mangled = lvn_state.mangler.mangle(&dest);
-//                     lvn_state.cloud.insert(mangled.clone(), *ci);
-
-//                     new_block.push(code);
-//                 } else {
-//                     // if we haven't, we add it to the table, get the canonical id, mangle the variable name, and add it to cloud
-//                     // and canonical variable
-//                     let mangled = lvn_state.mangler.mangle(&dest);
-//                     lvn_state.canonical_home.push(CanonicalHome::ConstExpr(
-//                         constant_type.clone(),
-//                         value.clone(),
-//                         mangled.clone(),
-//                     ));
-//                     let id = lvn_state.canonical_home.len() - 1;
-//                     lvn_state.table.insert(expr, id);
-//                     lvn_state.cloud.insert(mangled.clone(), id);
-//                     new_block.push(instr.clone());
-//                 }
-//             }
-//             _ => new_block.push(instr.clone()),
-//             // Code::Effect {
-//             //     op,
-//             //     args,
-//             //     funcs,
-//             //     labels,
-//             // } => todo!(),
-//             // Code::Memory {
-//             //     op,
-//             //     args,
-//             //     dest,
-//             //     ptr_type,
-//             // } => todo!(),
-//         };
-//     }
-
-//     basic_block.block = new_block;
-//     basic_block
-// }
