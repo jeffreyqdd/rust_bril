@@ -1,6 +1,6 @@
 use std::{collections::HashMap, fs::File};
 
-use crate::program::{Code, EffectOp, Function, Program};
+use crate::program::{Argument, Code, EffectOp, Function, Program, Type};
 use serde;
 use serde_json;
 
@@ -26,7 +26,8 @@ pub struct BasicBlock {
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
 pub struct FunctionBlock {
     pub name: String,
-    pub header: Function,
+    pub args: Option<Vec<Argument>>,
+    pub return_type: Option<Type>,
     pub basic_blocks: Vec<BasicBlock>,
 }
 
@@ -39,22 +40,32 @@ impl BasicBlock {
         let mut external_references = Vec::new();
         for code in &block {
             match code {
+                Code::Noop { .. } => continue,
                 Code::Label { .. } => continue,
                 Code::Constant { dest, .. } => {
-                    declared_variables.insert(dest);
+                    declared_variables.insert(dest.clone());
                 }
                 Code::Value { dest, args, .. } => {
-                    declared_variables.insert(dest);
+                    declared_variables.insert(dest.clone());
                     args.iter()
                         .flatten()
-                        .filter(|v| !declared_variables.contains(v))
+                        .filter(|v| !declared_variables.contains(*v))
                         .for_each(|v| external_references.push(v.clone()));
                 }
                 Code::Effect { args, .. } => args
                     .iter()
                     .flatten()
-                    .filter(|v| !declared_variables.contains(v))
+                    .filter(|v| !declared_variables.contains(*v))
                     .for_each(|v| external_references.push(v.clone())),
+                Code::Memory { args, dest, .. } => {
+                    if let Some(d) = dest.as_ref() {
+                        declared_variables.insert(d.clone());
+                    }
+                    args.iter()
+                        .flatten()
+                        .filter(|v| !declared_variables.contains(*v))
+                        .for_each(|v| external_references.push(v.clone()));
+                }
             }
         }
 
@@ -149,7 +160,8 @@ impl Program {
 
             ret.push(FunctionBlock {
                 name: function.name.clone(),
-                header: function.clone(),
+                args: function.args.clone(),
+                return_type: function.return_type.clone(),
                 basic_blocks: basic_block,
             });
         }
@@ -167,9 +179,7 @@ impl Program {
 #[allow(dead_code)]
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
 pub struct CfgGraph {
-    pub function_header: Function,
-    pub function_name: String,
-    pub blocks: Vec<BasicBlock>,
+    pub function: FunctionBlock,
     pub edges: Vec<Vec<usize>>, // edges[i] = successors of block i
     pub label_map: HashMap<String, usize>, // map label -> block index
     pub successor_references: Vec<Vec<String>>, // successors of this block will use "*this*" variable name
@@ -246,18 +256,26 @@ impl CfgGraph {
         }
 
         CfgGraph {
-            function_header: function_block.header.clone(),
-            function_name: function_block.name.clone(), // for backwards compatibility sadge
-            blocks: function_block.basic_blocks.clone(),
+            function: function_block.clone(),
             edges,
             label_map,
             successor_references,
         }
     }
 
-    pub fn into_function(mut self) -> Function {
-        self.function_header.instrs = self.blocks.into_iter().map(|x| x.block).flatten().collect();
-        self.function_header
+    pub fn into_function(self) -> Function {
+        Function {
+            name: self.function.name,
+            args: self.function.args,
+            return_type: self.function.return_type,
+            instrs: self
+                .function
+                .basic_blocks
+                .into_iter()
+                .map(|x| x.block)
+                .flatten()
+                .collect(),
+        }
     }
 
     #[allow(dead_code)]

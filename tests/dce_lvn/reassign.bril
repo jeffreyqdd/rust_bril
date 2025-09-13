@@ -1,0 +1,16 @@
+@main {
+    a: int = const 100;
+    a: int = const 42;
+    a: int = const 54;
+    print a;
+    
+    a: int = const 100;
+    a: int = const 100;
+    a: int = const 100;
+    a: int = const 100;
+    a: int = const 100;
+    a: int = const 100;
+    a: int = const 42;
+    a: int = const 54;
+    print a;
+}

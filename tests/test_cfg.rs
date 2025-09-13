@@ -15,8 +15,8 @@ fn test_add_cfg_construction() {
     assert_eq!(function_block.basic_blocks.len(), 1);
 
     let cfg = CfgGraph::from(function_block);
-    assert_eq!(cfg.function_name, "main");
-    assert_eq!(cfg.blocks.len(), 1);
+    assert_eq!(cfg.function.name, "main");
+    assert_eq!(cfg.function.basic_blocks.len(), 1);
     assert_eq!(cfg.edges.len(), 1);
     assert_eq!(cfg.edges[0].len(), 0); // No outgoing edges (Passthrough at end)
 }
@@ -34,8 +34,8 @@ fn test_positions_cfg_construction() {
     assert_eq!(function_block.basic_blocks.len(), 2);
 
     let cfg = CfgGraph::from(function_block);
-    assert_eq!(cfg.function_name, "main");
-    assert_eq!(cfg.blocks.len(), 2);
+    assert_eq!(cfg.function.name, "main");
+    assert_eq!(cfg.function.basic_blocks.len(), 2);
     assert_eq!(cfg.edges.len(), 2);
 
     // First block should have jmp to second block
@@ -58,7 +58,7 @@ fn test_cfg_serialization() {
 
     // Test that CFG can be serialized to JSON
     let json = cfg.to_string();
-    assert!(json.contains("function_name"));
+    assert!(json.contains("name"));
     assert!(json.contains("blocks"));
     assert!(json.contains("edges"));
     assert!(json.contains("label_map"));
@@ -81,17 +81,17 @@ fn test_cfg_graph_properties() {
     let cfg = CfgGraph::from(&function_blocks[0]);
 
     // Validate basic properties
-    assert_eq!(cfg.function_name, "main");
-    assert_eq!(cfg.blocks.len(), 2);
+    assert_eq!(cfg.function.name, "main");
+    assert_eq!(cfg.function.basic_blocks.len(), 2);
     assert_eq!(cfg.edges.len(), 2);
     assert_eq!(cfg.label_map.len(), 2); // Both blocks have labels
 
     // Validate block structure
-    let first_block = &cfg.blocks[0];
+    let first_block = &cfg.function.basic_blocks[0];
     assert!(first_block.label.starts_with("no_label_"));
     assert!(matches!(first_block.terminator, Terminator::Jmp(_)));
 
-    let second_block = &cfg.blocks[1];
+    let second_block = &cfg.function.basic_blocks[1];
     assert_eq!(second_block.label, "label");
     assert!(matches!(second_block.terminator, Terminator::Passthrough));
 
@@ -114,7 +114,7 @@ fn test_cfg_connectivity() {
     for (i, edges) in cfg.edges.iter().enumerate() {
         for &target in edges {
             assert!(
-                target < cfg.blocks.len(),
+                target < cfg.function.basic_blocks.len(),
                 "Edge from block {} points to invalid block {}",
                 i,
                 target
@@ -123,7 +123,7 @@ fn test_cfg_connectivity() {
     }
 
     // Test that all labels in terminators exist in label_map
-    for block in &cfg.blocks {
+    for block in &cfg.function.basic_blocks {
         match &block.terminator {
             Terminator::Jmp(label) => {
                 assert!(
@@ -156,13 +156,16 @@ fn test_simple_cfg_no_control_flow() {
     let cfg = CfgGraph::from(&function_blocks[0]);
 
     // Simple program should have one block with no outgoing edges
-    assert_eq!(cfg.blocks.len(), 1);
+    assert_eq!(cfg.function.basic_blocks.len(), 1);
     assert_eq!(cfg.edges.len(), 1);
     assert_eq!(cfg.edges[0].len(), 0);
     assert_eq!(cfg.label_map.len(), 1); // The block has a generated label
 
     // The single block should have Passthrough terminator
-    assert!(matches!(cfg.blocks[0].terminator, Terminator::Passthrough));
+    assert!(matches!(
+        cfg.function.basic_blocks[0].terminator,
+        Terminator::Passthrough
+    ));
 }
 
 #[test]
@@ -178,8 +181,8 @@ fn test_jumps_cfg_construction() {
     assert_eq!(function_block.basic_blocks.len(), 6);
 
     let cfg = CfgGraph::from(function_block);
-    assert_eq!(cfg.function_name, "main");
-    assert_eq!(cfg.blocks.len(), 6);
+    assert_eq!(cfg.function.name, "main");
+    assert_eq!(cfg.function.basic_blocks.len(), 6);
     assert_eq!(cfg.edges.len(), 6);
 
     // First block should have jmp to label1 (block 3)
@@ -214,10 +217,28 @@ fn test_jumps_cfg_construction() {
     assert_eq!(cfg.label_map["label3"], 5);
 
     // Verify terminators
-    assert!(matches!(cfg.blocks[0].terminator, Terminator::Jmp(_)));
-    assert!(matches!(cfg.blocks[1].terminator, Terminator::Jmp(_)));
-    assert!(matches!(cfg.blocks[2].terminator, Terminator::Jmp(_)));
-    assert!(matches!(cfg.blocks[3].terminator, Terminator::Passthrough));
-    assert!(matches!(cfg.blocks[4].terminator, Terminator::Passthrough));
-    assert!(matches!(cfg.blocks[5].terminator, Terminator::Passthrough));
+    assert!(matches!(
+        cfg.function.basic_blocks[0].terminator,
+        Terminator::Jmp(_)
+    ));
+    assert!(matches!(
+        cfg.function.basic_blocks[1].terminator,
+        Terminator::Jmp(_)
+    ));
+    assert!(matches!(
+        cfg.function.basic_blocks[2].terminator,
+        Terminator::Jmp(_)
+    ));
+    assert!(matches!(
+        cfg.function.basic_blocks[3].terminator,
+        Terminator::Passthrough
+    ));
+    assert!(matches!(
+        cfg.function.basic_blocks[4].terminator,
+        Terminator::Passthrough
+    ));
+    assert!(matches!(
+        cfg.function.basic_blocks[5].terminator,
+        Terminator::Passthrough
+    ));
 }

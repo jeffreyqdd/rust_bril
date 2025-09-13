@@ -4,20 +4,21 @@ use rust_bril::{blocks::CfgGraph, optimizations, program::Program, transform_pri
 #[derive(Parser, Debug)]
 #[command(version, about, long_about = None)]
 struct Args {
-    /// Input file (if omitted, read from stdin)
+    /// Input file (if omitted, read from stdin). If the file extension is .bril, will run bril2json to convert to json
     #[arg(short, long)]
     file: Option<String>,
 
     /// output file after running optimization passes (if omitted, write to stdout)
+    /// If the file extension is .bril, will run bril2txt to convert to text
     #[arg(short, long)]
     output: Option<String>,
     /// parse and print to stdout
     #[arg(long, action)]
     parse: bool,
 
-    /// lesson2: transform, which will add print statements before every `jmp` and `br` instruction (will write to stdout if no file is provided)
-    #[clap(long, num_args = 0..=1)]
-    transform_print: Option<Vec<String>>,
+    /// lesson2: transform, which will add print statements before every `jmp` and `br` instruction
+    #[clap(long, action)]
+    transform_print: bool,
 
     /// lesson2: construct cfg and write to file (will write to stdout if no file is provided)
     #[clap(long, num_args = 0..=1)]
@@ -40,13 +41,8 @@ fn main() {
         println!("{:#?}", program);
     }
 
-    if let Some(filepath) = args.transform_print {
+    if args.transform_print {
         program = transform_print(program);
-        if filepath.len() > 0 {
-            program.to_file(&filepath[0]);
-        } else {
-            println!("{}", program.to_string());
-        }
     }
 
     if let Some(filepath) = args.construct_cfg {
@@ -67,10 +63,16 @@ fn main() {
         let cfg_graphs: Vec<CfgGraph> = function_blocks
             .iter()
             .map(|x| CfgGraph::from(&x))
+            .map(|x| optimizations::lvn::lvn(x))
             .map(|x| optimizations::dce::dce(x))
             .collect();
 
-        println!("{:#?}", cfg_graphs);
-        Program::from(cfg_graphs).to_file("tmp.txt");
+        program = Program::from(cfg_graphs);
+    }
+
+    if let Some(filepath) = args.output {
+        program.to_file(&filepath);
+    } else {
+        println!("{}", program.to_string());
     }
 }

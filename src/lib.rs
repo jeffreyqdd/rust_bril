@@ -16,7 +16,7 @@ pub fn transform_print(mut program: program::Program) -> program::Program {
                     ..
                 } => {
                     new_instrs.push(program::Code::Constant {
-                        op: String::from("const"),
+                        op: crate::program::ConstantOp::Const,
                         dest: String::from("rust_bril_count"),
                         constant_type: Type::Int,
                         value: Literal::Int(match labels {

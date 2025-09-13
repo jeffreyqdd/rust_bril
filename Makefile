@@ -1,12 +1,31 @@
-
-JSON_FIXTURES := tests/fixtures/*.json
-
+TRANSFORM_FIXTURES := tests/fixtures/*.json
+PARSE_FIXTURES := tests/parse/*.bril
+DCE_LVN_FIXTURES := tests/dce_lvn/*.bril
+ALL_BENCHMARKS := benchmarks/**/*.bril
 
 test:
-	cargo test
+	cargo build --release
+	cargo test --quiet
+	turnt --env transform $(TRANSFORM_FIXTURES) --parallel
+	turnt --env parse $(PARSE_FIXTURES) --parallel
+	turnt --env dce_lvn $(DCE_LVN_FIXTURES) --parallel
 .PHONY: test
 
-test-transform:
-	turnt --env transform $(JSON_FIXTURES)
-.PHONY: test-transform
+bench-check:
+	cargo build --release
+	turnt --env bench_check $(ALL_BENCHMARKS) --parallel
+.PHONY: bench-check 
 
+bench-local:
+	cargo build --release
+	turnt --env bench_check $(ALL_BENCHMARKS) --parallel
+.PHONY: bench-local
+
+gen-test: 
+	turnt --env parse_baseline $(PARSE_FIXTURES) --parallel --save
+	turnt --env dce_lvn_baseline $(DCE_LVN_FIXTURES) --parallel --save
+.PHONY: gen-test
+
+gen-bench:
+	turnt --env bench_baseline $(ALL_BENCHMARKS) --parallel --save
+.PHONY: gen-bench

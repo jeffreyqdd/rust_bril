@@ -1,0 +1,11 @@
+@main {
+  v0: float = const 1.1;
+  v1: float = const 0.02;
+  v2: float = const 0.3;
+  v3: float = fadd v0 v1;
+  v4: float = fmul v2 v2;
+  v5: float = const 1.0;
+  v6: float = const 1000000.0;
+  v8: float = const -1000000.0;
+  v9: float = const 110000000000.0;
+}

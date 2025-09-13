@@ -1,8 +1,0 @@
-@main() {
-    literal_3: int = const 3;
-    literal_2: int = const 2;
-    literal_1: int = const 1;
-    v: int = add literal_3 literal_2;
-    sadness: int = add literal_3 literal_1;
-    print v;
-} 

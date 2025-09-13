@@ -1,3 +1,4 @@
+/// Module for dead code elimination, make sure to run after local variable numbering
 use std::vec;
 
 use crate::{blocks, program};
@@ -10,7 +11,7 @@ pub fn dce(mut cfg: blocks::CfgGraph) -> blocks::CfgGraph {
 
     // for cfg.referenced_variables
 
-    for (idx, basic_block) in cfg.blocks.iter_mut().enumerate() {
+    for (idx, basic_block) in cfg.function.basic_blocks.iter_mut().enumerate() {
         referenced_variables.clear();
         for i in &cfg.successor_references[idx] {
             referenced_variables.insert(i.clone());
@@ -20,16 +21,15 @@ pub fn dce(mut cfg: blocks::CfgGraph) -> blocks::CfgGraph {
         for (_idx, instruction) in basic_block.block.iter().rev().enumerate() {
             // println!("checking instruction {:?}", instruction);
             match instruction {
-                program::Code::Label { .. } => new_basic_block.push(instruction.clone()),
+                program::Code::Label { .. } | program::Code::Noop { .. } => {
+                    new_basic_block.push(instruction.clone())
+                }
                 program::Code::Constant { dest, .. } => {
                     if referenced_variables.contains(dest) {
                         // only push if referenced
                         new_basic_block.push(instruction.clone());
                         // println!("pushing {:?}", instruction);
-                        println!("----------");
-                        println!("{:?}", referenced_variables);
                         referenced_variables.remove(dest);
-                        println!("{:?}", referenced_variables);
                     }
                 }
                 program::Code::Value { dest, args, .. } => {
@@ -54,6 +54,16 @@ pub fn dce(mut cfg: blocks::CfgGraph) -> blocks::CfgGraph {
 
                     // push because effect operations have "side effects"
                     // println!("pushing {:?}", instruction);
+                }
+                program::Code::Memory { args, dest, .. } => {
+                    if referenced_variables.contains(dest.as_ref().unwrap()) {
+                        referenced_variables.remove(dest.as_ref().unwrap());
+                        for i in args.iter().flatten() {
+                            referenced_variables.insert(i.clone());
+                        }
+
+                        new_basic_block.push(instruction.clone());
+                    }
                 }
             }
         }
