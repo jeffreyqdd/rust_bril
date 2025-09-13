@@ -204,6 +204,14 @@ impl LocalValueNumberingTable {
             // self.cloud.insert(mangled.clone(), id);
             self.cloud.insert(mangled.clone(), *abstract_variable);
 
+            // update variable name in ch
+            if let CanonicalHome::ConstExpr(t, l, _) = &self.canonical_home[*abstract_variable] {
+                self.canonical_home[*abstract_variable] =
+                    CanonicalHome::ConstExpr(t.clone(), l.clone(), mangled.clone());
+            } else {
+                self.canonical_home[*abstract_variable] = CanonicalHome::Variable(mangled.clone());
+            }
+
             return ret;
         } else {
             // the expression is new
@@ -294,20 +302,35 @@ fn lvn_on_block(mut basic_block: crate::blocks::BasicBlock) -> crate::blocks::Ba
                 funcs,
                 labels,
             } => {
-                new_block.push(instr.clone());
-                // let concrete_args = args
-                //     .as_ref()
-                //     .expect("Effect type operations must have an args list")
-                //     .clone();
-                // let abstract_args = lvn_state.to_abstract_args_list(&concrete_args);
-                // let reprojected_args = lvn_state.from_abstract_args_list(&abstract_args);
+                if args.is_none() {
+                    new_block.push(instr.clone());
+                    continue;
+                }
 
-                // new_block.push(Code::Effect {
-                //     op: op.clone(),
-                //     args: Some(reprojected_args),
-                //     funcs: funcs.clone(),
-                //     labels: labels.clone(),
-                // });
+                // println!("mangler: {:?}", lvn_state.mangler);
+                // println!("cloud: {:?}", lvn_state.cloud);
+                // println!("ch: {:?}", lvn_state.canonical_home);
+                // println!("{:?}", instr);
+                if labels.is_some() {
+                    new_block.push(instr.clone());
+                    continue;
+                }
+
+                let concrete_args = args
+                    .as_ref()
+                    .expect("Should not be here because of args non none check")
+                    .clone();
+                let abstract_args = lvn_state.to_abstract_args_list(&concrete_args);
+                // println!("a {:?}", abstract_args);
+                let reprojected_args = lvn_state.from_abstract_args_list(&abstract_args);
+                // println!("b {:?}", abstract_args);
+
+                new_block.push(Code::Effect {
+                    op: op.clone(),
+                    args: Some(reprojected_args),
+                    funcs: funcs.clone(),
+                    labels: labels.clone(),
+                });
             }
             // Store, Alloc, and Free have side effects and must not be optimized
             // We are left with Load and PtrAdd which can be processed
