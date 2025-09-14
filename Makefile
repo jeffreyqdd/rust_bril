@@ -18,7 +18,7 @@ bench-check:
 
 bench-local:
 	cargo build --release
-	turnt --env bench_check $(ALL_BENCHMARKS) --parallel
+	turnt --env bench_local $(ALL_BENCHMARKS) --parallel
 .PHONY: bench-local
 
 gen-test: 
@@ -28,4 +28,6 @@ gen-test:
 
 gen-bench:
 	turnt --env bench_baseline $(ALL_BENCHMARKS) --parallel --save
+	turnt --env bench_baseline_profile $(ALL_BENCHMARKS) --parallel --save
+	turnt --env bench_local_profile $(ALL_BENCHMARKS) --parallel --save
 .PHONY: gen-bench

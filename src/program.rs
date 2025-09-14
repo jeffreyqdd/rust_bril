@@ -1,6 +1,8 @@
 use std::{
     fs::File,
+    hash::{Hash, Hasher},
     io::{self, BufReader, Read, Write},
+    mem,
 };
 
 use serde;
@@ -96,7 +98,7 @@ pub enum ConstantOp {
     Const,
 }
 
-#[derive(serde::Deserialize, serde::Serialize, Debug, Clone, Copy, PartialEq, Eq, Hash)]
+#[derive(serde::Deserialize, serde::Serialize, Debug, Clone, Copy)]
 #[serde(rename_all = "lowercase")]
 pub enum ValueOp {
     Add,
@@ -132,6 +134,26 @@ pub enum ValueOp {
     Bits2float,
     Call,
 }
+impl PartialEq for ValueOp {
+    fn eq(&self, other: &Self) -> bool {
+        if matches!(self, ValueOp::Call) || matches!(other, ValueOp::Call) {
+            return false;
+        }
+        // Compare discriminants (variant identity)
+        mem::discriminant(self) == mem::discriminant(other)
+    }
+}
+impl Eq for ValueOp {}
+impl Hash for ValueOp {
+    fn hash<H: Hasher>(&self, state: &mut H) {
+        match self {
+            ValueOp::Call => {
+                std::ptr::addr_of!(self).hash(state);
+            }
+            other => std::mem::discriminant(other).hash(state),
+        }
+    }
+}
 
 #[derive(serde::Deserialize, serde::Serialize, Debug, Clone, Copy, PartialEq, Eq, Hash)]
 #[serde(rename_all = "lowercase")]
@@ -143,7 +165,7 @@ pub enum MemoryOp {
     PtrAdd,
 }
 
-#[derive(serde::Deserialize, serde::Serialize, Debug, Clone, Copy, PartialEq, Eq, Hash)]
+#[derive(serde::Deserialize, serde::Serialize, Debug, Clone, Copy)]
 #[serde(rename_all = "lowercase")]
 pub enum EffectOp {
     Jmp,
@@ -151,6 +173,30 @@ pub enum EffectOp {
     Ret,
     Call, // important, call can be both "effect" and "value op"
     Print,
+}
+impl PartialEq for EffectOp {
+    fn eq(&self, other: &Self) -> bool {
+        match (self, other) {
+            (EffectOp::Call, _) => false,
+            (_, EffectOp::Call) => false,
+            (EffectOp::Jmp, EffectOp::Jmp) => true,
+            (EffectOp::Br, EffectOp::Br) => true,
+            (EffectOp::Ret, EffectOp::Ret) => true,
+            (EffectOp::Print, EffectOp::Print) => true,
+            _ => false,
+        }
+    }
+}
+impl Eq for EffectOp {}
+impl Hash for EffectOp {
+    fn hash<H: Hasher>(&self, state: &mut H) {
+        match self {
+            EffectOp::Call => {
+                std::ptr::addr_of!(self).hash(state);
+            }
+            other => std::mem::discriminant(other).hash(state),
+        }
+    }
 }
 
 #[derive(serde::Deserialize, serde::Serialize, Debug, Clone, PartialEq, Eq, Hash)]

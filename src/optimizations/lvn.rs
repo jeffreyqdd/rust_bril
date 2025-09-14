@@ -341,6 +341,15 @@ fn lvn_on_block(mut basic_block: crate::blocks::BasicBlock) -> crate::blocks::Ba
                 funcs,
                 labels,
             } => {
+                match value_type {
+                    Type::Ptr(_) => {
+                        // do not touch ptrs
+                        new_block.push(instr.clone());
+                        continue;
+                    }
+                    _ => (),
+                }
+                // if it is a call, we just re-project the args;
                 let concrete_args = args
                     .as_ref()
                     .expect("Value type operations must have an args list")

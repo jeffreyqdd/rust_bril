@@ -30,8 +30,16 @@ command = "bril2json < {filename} | brilirs"
 [envs.bench_baseline]
 command = "bril2json < {filename} | brilirs $(awk '/^# ARGS:/ {{for (i=3; i<=NF; i++) print $i}}' {filename})"
 
+[envs.bench_baseline_profile]
+command = "bril2json < {filename} | brilirs --profile $(awk '/^# ARGS:/ {{for (i=3; i<=NF; i++) print $i}}' {filename})"
+output.baseline_prof = "2"
+
 [envs.bench_check]
 command = "./target/release/rust_bril -f {filename} | brilirs $(awk '/^# ARGS:/ {{for (i=3; i<=NF; i++) print $i}}' {filename})"
 
 [envs.bench_local]
 command = "./target/release/rust_bril --local -f {filename} | brilirs $(awk '/^# ARGS:/ {{for (i=3; i<=NF; i++) print $i}}' {filename})"
+
+[envs.bench_local_profile]
+command = "./target/release/rust_bril --local -f {filename} | brilirs --profile $(awk '/^# ARGS:/ {{for (i=3; i<=NF; i++) print $i}}' {filename})"
+output.prof = "2"
