@@ -46,11 +46,11 @@ impl BasicBlock {
                     declared_variables.insert(dest.clone());
                 }
                 Code::Value { dest, args, .. } => {
-                    declared_variables.insert(dest.clone());
                     args.iter()
                         .flatten()
                         .filter(|v| !declared_variables.contains(*v))
                         .for_each(|v| external_references.push(v.clone()));
+                    declared_variables.insert(dest.clone());
                 }
                 Code::Effect { args, .. } => args
                     .iter()
@@ -58,13 +58,13 @@ impl BasicBlock {
                     .filter(|v| !declared_variables.contains(*v))
                     .for_each(|v| external_references.push(v.clone())),
                 Code::Memory { args, dest, .. } => {
-                    if let Some(d) = dest.as_ref() {
-                        declared_variables.insert(d.clone());
-                    }
                     args.iter()
                         .flatten()
                         .filter(|v| !declared_variables.contains(*v))
                         .for_each(|v| external_references.push(v.clone()));
+                    if let Some(d) = dest.as_ref() {
+                        declared_variables.insert(d.clone());
+                    }
                 }
             }
         }
