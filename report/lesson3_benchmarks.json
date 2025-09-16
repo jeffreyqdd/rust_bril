@@ -14,7 +14,7 @@
     "primes-between.bril": {
         "original_lines": 55,
         "original_dyn_inst": 574100,
-        "compiled_lines": 55,
+        "compiled_lines": 52,
         "compiled_dyn_inst": 574100
     },
     "mod_pow.bril": {
@@ -74,7 +74,7 @@
     "is-decreasing.bril": {
         "original_lines": 44,
         "original_dyn_inst": 127,
-        "compiled_lines": 43,
+        "compiled_lines": 41,
         "compiled_dyn_inst": 121
     },
     "graycode.bril": {
@@ -368,7 +368,7 @@
     "fizz-buzz.bril": {
         "original_lines": 71,
         "original_dyn_inst": 3652,
-        "compiled_lines": 62,
+        "compiled_lines": 56,
         "compiled_dyn_inst": 3052
     },
     "bitwise-ops.bril": {
@@ -452,7 +452,7 @@
     "conjugate-gradient.bril": {
         "original_lines": 233,
         "original_dyn_inst": 1999,
-        "compiled_lines": 232,
+        "compiled_lines": 230,
         "compiled_dyn_inst": 1963
     },
     "leibniz.bril": {
@@ -470,7 +470,7 @@
     "newton.bril": {
         "original_lines": 36,
         "original_dyn_inst": 217,
-        "compiled_lines": 36,
+        "compiled_lines": 35,
         "compiled_dyn_inst": 217
     },
     "euler.bril": {
@@ -482,13 +482,13 @@
     "riemann.bril": {
         "original_lines": 83,
         "original_dyn_inst": 298,
-        "compiled_lines": 83,
+        "compiled_lines": 81,
         "compiled_dyn_inst": 298
     },
     "mandelbrot.bril": {
         "original_lines": 165,
         "original_dyn_inst": 2720947,
-        "compiled_lines": 151,
+        "compiled_lines": 149,
         "compiled_dyn_inst": 2234695
     },
     "logistic.bril": {
@@ -506,7 +506,7 @@
     "norm.bril": {
         "original_lines": 104,
         "original_dyn_inst": 505,
-        "compiled_lines": 104,
+        "compiled_lines": 103,
         "compiled_dyn_inst": 505
     },
     "harmonic-sum.bril": {
@@ -518,7 +518,7 @@
     "cordic.bril": {
         "original_lines": 153,
         "original_dyn_inst": 1062,
-        "compiled_lines": 143,
+        "compiled_lines": 141,
         "compiled_dyn_inst": 900
     },
     "exponentiation-by-squaring.bril": {
@@ -548,7 +548,7 @@
     "quickselect.bril": {
         "original_lines": 111,
         "original_dyn_inst": 279,
-        "compiled_lines": 111,
+        "compiled_lines": 110,
         "compiled_dyn_inst": 279
     },
     "1dconv.bril": {
@@ -560,7 +560,7 @@
     "kadane.bril": {
         "original_lines": 79,
         "original_dyn_inst": 157,
-        "compiled_lines": 79,
+        "compiled_lines": 78,
         "compiled_dyn_inst": 157
     },
     "lis.bril": {
@@ -578,7 +578,7 @@
     "bubblesort.bril": {
         "original_lines": 80,
         "original_dyn_inst": 253,
-        "compiled_lines": 80,
+        "compiled_lines": 79,
         "compiled_dyn_inst": 253
     },
     "filter.bril": {
@@ -620,7 +620,7 @@
     "char-poly.bril": {
         "original_lines": 164,
         "original_dyn_inst": 383,
-        "compiled_lines": 163,
+        "compiled_lines": 161,
         "compiled_dyn_inst": 382
     },
     "csrmv.bril": {
@@ -644,13 +644,13 @@
     "major-elm.bril": {
         "original_lines": 55,
         "original_dyn_inst": 47,
-        "compiled_lines": 55,
+        "compiled_lines": 54,
         "compiled_dyn_inst": 47
     },
     "max-subarray.bril": {
         "original_lines": 65,
         "original_dyn_inst": 193,
-        "compiled_lines": 65,
+        "compiled_lines": 64,
         "compiled_dyn_inst": 193
     },
     "mat-mul.bril": {
@@ -662,7 +662,7 @@
     "fib.bril": {
         "original_lines": 33,
         "original_dyn_inst": 121,
-        "compiled_lines": 33,
+        "compiled_lines": 32,
         "compiled_dyn_inst": 121
     },
     "vsmul.bril": {
@@ -680,7 +680,7 @@
     "insertion-sort.bril": {
         "original_lines": 73,
         "original_dyn_inst": 170,
-        "compiled_lines": 73,
+        "compiled_lines": 72,
         "compiled_dyn_inst": 170
     },
     "2dconvol.bril": {
@@ -692,7 +692,7 @@
     "quicksort.bril": {
         "original_lines": 95,
         "original_dyn_inst": 264,
-        "compiled_lines": 95,
+        "compiled_lines": 93,
         "compiled_dyn_inst": 264
     },
     "two-sum.bril": {
@@ -710,7 +710,7 @@
     "sorting-network-five.bril": {
         "original_lines": 133,
         "original_dyn_inst": 284,
-        "compiled_lines": 109,
+        "compiled_lines": 108,
         "compiled_dyn_inst": 256
     },
     "connected-components.bril": {
@@ -722,7 +722,7 @@
     "binary-search.bril": {
         "original_lines": 84,
         "original_dyn_inst": 78,
-        "compiled_lines": 83,
+        "compiled_lines": 82,
         "compiled_dyn_inst": 75
     }
 }
