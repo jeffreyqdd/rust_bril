@@ -3,6 +3,7 @@ use std::{
     hash::{Hash, Hasher},
     io::{self, BufReader, Read, Write},
     mem,
+    ops::{Add, BitAnd, BitOr, Div, Mul, Not, Sub},
 };
 
 use serde;
@@ -134,6 +135,126 @@ pub enum ValueOp {
     Bits2float,
     Call,
 }
+
+impl Literal {
+    pub fn cast_to(&self, t: &Type) -> Literal {
+        match t {
+            Type::Int => match self {
+                Literal::Int(x) => Literal::Int(*x),
+                Literal::Bool(_) => panic!(),
+                Literal::Float(x) => Literal::Int(*x as i64),
+                Literal::Char(_) => panic!(),
+            },
+            Type::Bool => match self {
+                Literal::Int(x) => Literal::Bool(*x != 0),
+                Literal::Bool(_) => self.clone(),
+                Literal::Float(x) => Literal::Bool(*x != 0.),
+                Literal::Char(_) => panic!("no casts to bool from int"),
+            },
+            Type::Float => match self {
+                Literal::Int(x) => Literal::Float(*x as f64),
+                Literal::Bool(_) => panic!(),
+                Literal::Float(x) => Literal::Float(*x),
+                Literal::Char(_) => panic!(),
+            },
+            Type::Char => panic!("no casts to char exist"),
+            Type::Ptr(_) => panic!("cannot cast to ptr type"),
+            Type::None => panic!("cannot cast to none type"),
+        }
+    }
+}
+
+impl Add for Literal {
+    type Output = Literal;
+    fn add(self, rhs: Self) -> Self::Output {
+        match (self, rhs) {
+            (Literal::Int(a), Literal::Int(b)) => Literal::Int(a + b),
+            (Literal::Float(a), Literal::Float(b)) => Literal::Float(a + b),
+            _ => panic!("Invalid Add operands"),
+        }
+    }
+}
+
+impl Sub for Literal {
+    type Output = Literal;
+    fn sub(self, rhs: Self) -> Self::Output {
+        match (self, rhs) {
+            (Literal::Int(a), Literal::Int(b)) => Literal::Int(a - b),
+            (Literal::Float(a), Literal::Float(b)) => Literal::Float(a - b),
+            _ => panic!("Invalid operands"),
+        }
+    }
+}
+
+impl Mul for Literal {
+    type Output = Literal;
+    fn mul(self, rhs: Self) -> Self::Output {
+        match (self, rhs) {
+            (Literal::Int(a), Literal::Int(b)) => Literal::Int(a * b),
+            (Literal::Float(a), Literal::Float(b)) => Literal::Float(a * b),
+            _ => panic!("Invalid operands"),
+        }
+    }
+}
+
+impl Div for Literal {
+    type Output = Literal;
+    fn div(self, rhs: Self) -> Self::Output {
+        match (self, rhs) {
+            (Literal::Int(a), Literal::Int(b)) => Literal::Int(a / b),
+            (Literal::Float(a), Literal::Float(b)) => Literal::Float(a / b),
+            _ => panic!("Invalid operands"),
+        }
+    }
+}
+
+impl BitAnd for Literal {
+    type Output = Literal;
+    fn bitand(self, rhs: Self) -> Self::Output {
+        match (self, rhs) {
+            (Literal::Bool(a), Literal::Bool(b)) => Literal::Bool(a && b),
+            _ => panic!("Invalid operands"),
+        }
+    }
+}
+
+impl BitOr for Literal {
+    type Output = Literal;
+    fn bitor(self, rhs: Self) -> Self::Output {
+        match (self, rhs) {
+            (Literal::Bool(a), Literal::Bool(b)) => Literal::Bool(a || b),
+            _ => panic!("Invalid operands"),
+        }
+    }
+}
+
+impl Not for Literal {
+    type Output = Literal;
+    fn not(self) -> Self::Output {
+        match self {
+            Literal::Bool(a) => Literal::Bool(!a),
+            _ => panic!("Invalid operands"),
+        }
+    }
+}
+
+impl PartialOrd for Literal {
+    fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
+        match (self, other) {
+            (Literal::Int(a), Literal::Int(b)) => a.partial_cmp(b),
+            (Literal::Float(a), Literal::Float(b)) => a.partial_cmp(b),
+            (Literal::Char(a), Literal::Char(b)) => a.partial_cmp(b),
+            _ => None, // no ordering for Bool or cross-type
+        }
+    }
+}
+
+impl Ord for Literal {
+    fn cmp(&self, other: &Self) -> std::cmp::Ordering {
+        self.partial_cmp(other).expect("Invalid Ord comparison")
+    }
+}
+
 impl PartialEq for ValueOp {
     fn eq(&self, other: &Self) -> bool {
         if matches!(self, ValueOp::Call) || matches!(other, ValueOp::Call) {
