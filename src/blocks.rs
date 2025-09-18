@@ -181,6 +181,7 @@ impl Program {
 pub struct CfgGraph {
     pub function: FunctionBlock,
     pub edges: Vec<Vec<usize>>, // edges[i] = successors of block i
+    pub predecessors: Vec<Vec<usize>>,
     pub label_map: HashMap<String, usize>, // map label -> block index
     pub successor_references: Vec<Vec<String>>, // successors of this block will use "*this*" variable name
 }
@@ -255,9 +256,19 @@ impl CfgGraph {
             }
         }
 
+        let mut predecessors = vec![Vec::new(); edges.len()];
+
+        for (from, successors) in edges.iter().enumerate() {
+            for &to in successors {
+                // Format the predecessor reference as "b{from}"
+                predecessors[to].push(from);
+            }
+        }
+
         CfgGraph {
             function: function_block.clone(),
             edges,
+            predecessors,
             label_map,
             successor_references,
         }
