@@ -179,7 +179,7 @@ impl SemanticalReasononing for BrilSemantics {
         }
     }
 
-    fn eval_constexpr(&self, op: &Operation, t: &Type, literals: &Vec<Literal>) -> Literal {
+    fn eval_constexpr(&self, op: &Operation, _t: &Type, literals: &Vec<Literal>) -> Literal {
         assert!(self.can_constexpr(op));
         match op {
             Operation::Value(value_op) => match value_op {

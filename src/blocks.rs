@@ -289,6 +289,36 @@ impl CfgGraph {
         }
     }
 
+    /// None variable if node dne
+    pub fn predecessors(&self, node: &str) -> Option<Vec<&BasicBlock>> {
+        let id = self.label_map.get(node);
+
+        if let Some(id) = id {
+            let ret = self.predecessors[*id]
+                .iter()
+                .map(|u| &self.function.basic_blocks[*u])
+                .collect::<Vec<&BasicBlock>>();
+            Some(ret)
+        } else {
+            None
+        }
+    }
+
+    /// None variable if node dne
+    pub fn successor(&self, node: &str) -> Option<Vec<&BasicBlock>> {
+        let id = self.label_map.get(node);
+
+        if let Some(id) = id {
+            let ret = self.edges[*id]
+                .iter()
+                .map(|u| &self.function.basic_blocks[*u])
+                .collect::<Vec<&BasicBlock>>();
+            Some(ret)
+        } else {
+            None
+        }
+    }
+
     #[allow(dead_code)]
     pub fn to_string(&self) -> String {
         serde_json::to_string(self).unwrap()

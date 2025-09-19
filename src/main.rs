@@ -1,5 +1,10 @@
 use clap::Parser;
-use rust_bril::{blocks::CfgGraph, optimizations, program::Program, transform_print};
+use rust_bril::{
+    blocks::CfgGraph,
+    optimizations::{self, dataflow_properties::InitializedVariables},
+    program::Program,
+    transform_print,
+};
 
 #[derive(Parser, Debug)]
 #[command(version, about, long_about = None)]
@@ -27,6 +32,10 @@ struct Args {
     /// lesson 3: local optimization (DCE) (will write to stdout if no file is provided)
     #[arg(long, action)]
     local: bool,
+
+    /// lesson 4: data flow graph
+    #[arg(long, action)]
+    dataflow: bool,
 }
 fn main() {
     let args = Args::parse();
@@ -68,6 +77,17 @@ fn main() {
             .collect();
 
         program = Program::from(cfg_graphs);
+    }
+
+    if args.dataflow {
+        let function_blocks = program.basic_blocks();
+        let cfg_graphs: Vec<()> = function_blocks
+            .iter()
+            .map(|x| CfgGraph::from(&x))
+            .map(|x| optimizations::dataflow::run_dataflow_analysis(x, InitializedVariables {}))
+            .collect();
+        std::mem::drop(cfg_graphs);
+        return;
     }
 
     if let Some(filepath) = args.output {

@@ -1,0 +1,12 @@
+@main {
+.hello:
+    v0: int = const 1;
+    v1: bool = eq v0 v0;
+    br v1 .if .else;
+.if:
+    v2: int = const 5;
+    jmp .end;
+.else:
+.end:
+    print result;
+}
