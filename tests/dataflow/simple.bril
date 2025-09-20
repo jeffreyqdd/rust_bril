@@ -1,0 +1,7 @@
+@main {
+.label:
+    v1: int = const 2; 
+    v2: int = const 2; 
+    v3: int = const 2; 
+    v4: int = const 2; 
+}

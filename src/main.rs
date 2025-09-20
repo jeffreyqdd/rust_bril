@@ -1,10 +1,23 @@
-use clap::Parser;
+use clap::{Parser, ValueEnum};
 use rust_bril::{
     blocks::CfgGraph,
-    optimizations::{self, dataflow_properties::InitializedVariables},
+    optimizations::{
+        self,
+        dataflow::run_dataflow_analysis,
+        dataflow_properties::{InitializedVariables, LiveVariables},
+    },
     program::Program,
     transform_print,
 };
+
+#[derive(ValueEnum, Clone, Debug, PartialEq, Eq)]
+enum DataflowAnalysis {
+    /// set of variables that are initialized by the end of each basic block
+    InitializedVariables,
+
+    /// set of variables that are referenced at some point in the future
+    LiveVariables,
+}
 
 #[derive(Parser, Debug)]
 #[command(version, about, long_about = None)]
@@ -33,9 +46,9 @@ struct Args {
     #[arg(long, action)]
     local: bool,
 
-    /// lesson 4: data flow graph
-    #[arg(long, action)]
-    dataflow: bool,
+    /// lesson 4: dataflow graphs (prints to stdout and takes as many analyses as you want)
+    #[arg(long, value_enum, num_args=1..)]
+    dataflow: Option<Vec<DataflowAnalysis>>,
 }
 fn main() {
     let args = Args::parse();
@@ -79,14 +92,32 @@ fn main() {
         program = Program::from(cfg_graphs);
     }
 
-    if args.dataflow {
+    if let Some(analyses) = args.dataflow {
+        // for analysis in &analyses {
+        //     let property: Box<dyn WorklistProperty> = match analysis {
+        //         DataflowAnalysis::InitializedVariables => {
+        //             Box::new(dataflow_properties::InitializedVariables {})
+        //         }
+        //         DataflowAnalysis::LiveVariables => Box::new(dataflow_properties::LiveVariables {}),
+        //     };
+        // }
+
         let function_blocks = program.basic_blocks();
-        let cfg_graphs: Vec<()> = function_blocks
-            .iter()
-            .map(|x| CfgGraph::from(&x))
-            .map(|x| optimizations::dataflow::run_dataflow_analysis(x, InitializedVariables {}))
-            .collect();
-        std::mem::drop(cfg_graphs);
+        let cfg_graphs: Vec<CfgGraph> =
+            function_blocks.iter().map(|x| CfgGraph::from(&x)).collect();
+
+        if analyses.contains(&DataflowAnalysis::InitializedVariables) {
+            cfg_graphs
+                .iter()
+                .for_each(|x| run_dataflow_analysis(x.clone(), InitializedVariables {}));
+        }
+
+        if analyses.contains(&DataflowAnalysis::LiveVariables) {
+            cfg_graphs
+                .iter()
+                .for_each(|x| run_dataflow_analysis(x.clone(), LiveVariables {}));
+        }
+
         return;
     }
 

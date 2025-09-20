@@ -43,3 +43,11 @@ command = "./target/release/rust_bril --local -f {filename} | brilirs $(awk '/^#
 [envs.bench_local_profile]
 command = "./target/release/rust_bril --local -f {filename} | brilirs --profile $(awk '/^# ARGS:/ {{for (i=3; i<=NF; i++) print $i}}' {filename})"
 output.prof = "2"
+
+[envs.dataflow_initialized_variables]
+command = "cargo run --release --quiet -- -f {filename} --dataflow initialized-variables"
+output.initialized_variables_out = "-"
+
+[envs.dataflow_live_variables]
+command = "cargo run --release --quiet -- -f {filename} --dataflow live-variables"
+output.live_variables_out = "-"

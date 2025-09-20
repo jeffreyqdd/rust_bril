@@ -1,0 +1,13 @@
+@main {
+.label:
+    a: int = const 1;
+    b: bool = eq a a;
+    br b .if .else;
+.if:
+    xyz: int = const 1;
+    jmp .finally;
+.else:
+    abc: int = const 1;
+.finally: 
+    print a;
+}

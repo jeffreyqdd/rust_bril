@@ -1,6 +1,7 @@
 TRANSFORM_FIXTURES := tests/fixtures/*.json
 PARSE_FIXTURES := tests/parse/*.bril
 DCE_LVN_FIXTURES := tests/dce_lvn/*.bril
+DATAFLOW_FIXTURES := tests/dataflow/*.bril
 ALL_BENCHMARKS := benchmarks/**/*.bril
 
 test:
@@ -24,6 +25,8 @@ bench-local:
 gen-test: 
 	turnt --env parse_baseline $(PARSE_FIXTURES) --parallel --save
 	turnt --env dce_lvn_baseline $(DCE_LVN_FIXTURES) --parallel --save
+	turnt --env dataflow_initialized_variables $(DATAFLOW_FIXTURES) --parallel --save
+	turnt --env dataflow_live_variables $(DATAFLOW_FIXTURES) --parallel --save
 .PHONY: gen-test
 
 gen-bench:
