@@ -107,15 +107,27 @@ fn main() {
             function_blocks.iter().map(|x| CfgGraph::from(&x)).collect();
 
         if analyses.contains(&DataflowAnalysis::InitializedVariables) {
-            cfg_graphs
-                .iter()
-                .for_each(|x| run_dataflow_analysis(x.clone(), InitializedVariables {}));
+            cfg_graphs.iter().for_each(|x| {
+                let result = run_dataflow_analysis(x.clone(), InitializedVariables {});
+                println!("Function: {}", x.function.name);
+                for i in result {
+                    println!("\t{}:", i.label_name);
+                    println!("\t\tin: {:?}", i.input);
+                    println!("\t\tout: {:?}", i.output);
+                }
+            });
         }
 
         if analyses.contains(&DataflowAnalysis::LiveVariables) {
-            cfg_graphs
-                .iter()
-                .for_each(|x| run_dataflow_analysis(x.clone(), LiveVariables {}));
+            cfg_graphs.iter().for_each(|x| {
+                let result = run_dataflow_analysis(x.clone(), LiveVariables {});
+                println!("Function: {}", x.function.name);
+                for i in result {
+                    println!("\t{}:", i.label_name);
+                    println!("\t\tin: {:?}", i.input);
+                    println!("\t\tout: {:?}", i.output);
+                }
+            });
         }
 
         return;

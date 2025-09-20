@@ -183,7 +183,6 @@ pub struct CfgGraph {
     pub edges: Vec<Vec<usize>>, // edges[i] = successors of block i
     pub predecessors: Vec<Vec<usize>>,
     pub label_map: HashMap<String, usize>, // map label -> block index
-    pub successor_references: Vec<Vec<String>>, // successors of this block will use "*this*" variable name
 }
 
 impl CfgGraph {
@@ -220,42 +219,6 @@ impl CfgGraph {
             }
         }
 
-        // for now, need to reverse successor relationship into ancestor relationship
-        // so can easily propagate upwards external references
-        let mut ancestor = vec![Vec::new(); function_block.basic_blocks.len()];
-        for (parent, children) in edges.iter().enumerate() {
-            for i in children {
-                ancestor[*i].push(parent);
-            }
-        }
-
-        // propagate upwards
-        let mut successor_references = vec![Vec::new(); function_block.basic_blocks.len()];
-        for (block_id, basic_block) in function_block.basic_blocks.iter().enumerate() {
-            for variable in &basic_block.external_references {
-                let mut visited = std::collections::HashSet::new();
-                let mut queue = std::collections::VecDeque::new();
-
-                for i in &ancestor[block_id] {
-                    queue.push_back(i);
-                }
-
-                while !queue.is_empty() {
-                    let node = queue.pop_front().unwrap();
-                    if visited.contains(&node) {
-                        continue;
-                    }
-
-                    visited.insert(node);
-                    successor_references[*node].push(variable.clone());
-
-                    for i in &ancestor[*node] {
-                        queue.push_back(i);
-                    }
-                }
-            }
-        }
-
         let mut predecessors = vec![Vec::new(); edges.len()];
 
         for (from, successors) in edges.iter().enumerate() {
@@ -270,7 +233,6 @@ impl CfgGraph {
             edges,
             predecessors,
             label_map,
-            successor_references,
         }
     }
 

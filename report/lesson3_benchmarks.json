@@ -572,7 +572,7 @@
     "sieve.bril": {
         "original_lines": 93,
         "original_dyn_inst": 3482,
-        "compiled_lines": 89,
+        "compiled_lines": 90,
         "compiled_dyn_inst": 3454
     },
     "bubblesort.bril": {

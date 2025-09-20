@@ -6,7 +6,7 @@ pub trait WorklistProperty {
     type Domain: Clone + PartialEq + Eq + std::fmt::Debug;
 
     fn init() -> Self::Domain;
-    fn deterministic_printable_medium(domain: &Self::Domain) -> Vec<String>;
+    fn deterministic_array(domain: &Self::Domain) -> Vec<String>;
 
     fn is_forward(&self) -> bool;
     fn merge(&self, predecessors: &Vec<Self::Domain>) -> Self::Domain;
@@ -43,7 +43,7 @@ impl WorklistProperty for InitializedVariables {
         d
     }
 
-    fn deterministic_printable_medium(domain: &Self::Domain) -> Vec<String> {
+    fn deterministic_array(domain: &Self::Domain) -> Vec<String> {
         let mut x: Vec<String> = domain.clone().into_iter().collect();
         x.sort();
         x
@@ -58,7 +58,7 @@ impl WorklistProperty for LiveVariables {
         HashSet::new()
     }
 
-    fn deterministic_printable_medium(domain: &Self::Domain) -> Vec<String> {
+    fn deterministic_array(domain: &Self::Domain) -> Vec<String> {
         let mut x: Vec<String> = domain.clone().into_iter().collect();
         x.sort();
         x

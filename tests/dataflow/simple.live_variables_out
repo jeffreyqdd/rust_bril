@@ -1,3 +1,4 @@
-label:
-	in: []
-	out: []
+Function: main
+	label:
+		in: []
+		out: []

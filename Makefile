@@ -10,6 +10,8 @@ test:
 	turnt --env transform $(TRANSFORM_FIXTURES) --parallel
 	turnt --env parse $(PARSE_FIXTURES) --parallel
 	turnt --env dce_lvn $(DCE_LVN_FIXTURES) --parallel
+	turnt --env dataflow_initialized_variables $(DATAFLOW_FIXTURES) --parallel
+	turnt --env dataflow_live_variables $(DATAFLOW_FIXTURES) --parallel
 .PHONY: test
 
 bench-check:
