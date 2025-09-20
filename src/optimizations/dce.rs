@@ -1,6 +1,8 @@
 /// Module for dead code elimination, make sure to run after local variable numbering
 use std::vec;
 
+use crate::optimizations::dataflow::run_dataflow_analysis;
+use crate::optimizations::dataflow_properties::LiveVariables;
 use crate::{blocks, program};
 
 pub fn dce(mut cfg: blocks::CfgGraph) -> blocks::CfgGraph {
@@ -10,10 +12,11 @@ pub fn dce(mut cfg: blocks::CfgGraph) -> blocks::CfgGraph {
     let mut referenced_variables = std::collections::HashSet::new();
 
     // for cfg.referenced_variables
+    let successor_references = run_dataflow_analysis(cfg.clone(), LiveVariables {});
 
     for (idx, basic_block) in cfg.function.basic_blocks.iter_mut().enumerate() {
         referenced_variables.clear();
-        for i in &cfg.successor_references[idx] {
+        for i in &successor_references[idx].output {
             referenced_variables.insert(i.clone());
         }
 

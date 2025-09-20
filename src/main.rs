@@ -1,5 +1,23 @@
-use clap::Parser;
-use rust_bril::{blocks::CfgGraph, optimizations, program::Program, transform_print};
+use clap::{Parser, ValueEnum};
+use rust_bril::{
+    blocks::CfgGraph,
+    optimizations::{
+        self,
+        dataflow::run_dataflow_analysis,
+        dataflow_properties::{InitializedVariables, LiveVariables},
+    },
+    program::Program,
+    transform_print,
+};
+
+#[derive(ValueEnum, Clone, Debug, PartialEq, Eq)]
+enum DataflowAnalysis {
+    /// set of variables that are initialized by the end of each basic block
+    InitializedVariables,
+
+    /// set of variables that are referenced at some point in the future
+    LiveVariables,
+}
 
 #[derive(Parser, Debug)]
 #[command(version, about, long_about = None)]
@@ -27,6 +45,10 @@ struct Args {
     /// lesson 3: local optimization (DCE) (will write to stdout if no file is provided)
     #[arg(long, action)]
     local: bool,
+
+    /// lesson 4: dataflow graphs (prints to stdout and takes as many analyses as you want)
+    #[arg(long, value_enum, num_args=1..)]
+    dataflow: Option<Vec<DataflowAnalysis>>,
 }
 fn main() {
     let args = Args::parse();
@@ -68,6 +90,47 @@ fn main() {
             .collect();
 
         program = Program::from(cfg_graphs);
+    }
+
+    if let Some(analyses) = args.dataflow {
+        // for analysis in &analyses {
+        //     let property: Box<dyn WorklistProperty> = match analysis {
+        //         DataflowAnalysis::InitializedVariables => {
+        //             Box::new(dataflow_properties::InitializedVariables {})
+        //         }
+        //         DataflowAnalysis::LiveVariables => Box::new(dataflow_properties::LiveVariables {}),
+        //     };
+        // }
+
+        let function_blocks = program.basic_blocks();
+        let cfg_graphs: Vec<CfgGraph> =
+            function_blocks.iter().map(|x| CfgGraph::from(&x)).collect();
+
+        if analyses.contains(&DataflowAnalysis::InitializedVariables) {
+            cfg_graphs.iter().for_each(|x| {
+                let result = run_dataflow_analysis(x.clone(), InitializedVariables {});
+                println!("Function: {}", x.function.name);
+                for i in result {
+                    println!("\t{}:", i.label_name);
+                    println!("\t\tin: {:?}", i.input);
+                    println!("\t\tout: {:?}", i.output);
+                }
+            });
+        }
+
+        if analyses.contains(&DataflowAnalysis::LiveVariables) {
+            cfg_graphs.iter().for_each(|x| {
+                let result = run_dataflow_analysis(x.clone(), LiveVariables {});
+                println!("Function: {}", x.function.name);
+                for i in result {
+                    println!("\t{}:", i.label_name);
+                    println!("\t\tin: {:?}", i.input);
+                    println!("\t\tout: {:?}", i.output);
+                }
+            });
+        }
+
+        return;
     }
 
     if let Some(filepath) = args.output {

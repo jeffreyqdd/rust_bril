@@ -1,0 +1,13 @@
+Function: main
+	label:
+		in: ["a"]
+		out: ["a", "b"]
+	if:
+		in: ["a"]
+		out: ["a"]
+	else:
+		in: ["a"]
+		out: ["a"]
+	finally:
+		in: []
+		out: ["a"]
