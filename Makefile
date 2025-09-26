@@ -16,12 +16,12 @@ test:
 
 bench-check:
 	cargo build --release
-	turnt --env bench_check $(ALL_BENCHMARKS) --parallel
+	turnt --env bench_check $(ALL_BENCHMARKS) --parallel --verbose
 .PHONY: bench-check 
 
 bench-local:
 	cargo build --release
-	turnt --env bench_local $(ALL_BENCHMARKS) --parallel
+	turnt --env bench_local $(ALL_BENCHMARKS) --parallel --verbose
 .PHONY: bench-local
 
 gen-test: 

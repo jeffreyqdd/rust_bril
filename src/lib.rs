@@ -1,4 +1,5 @@
 pub mod blocks;
+pub mod dominance;
 pub mod optimizations;
 pub mod program;
 

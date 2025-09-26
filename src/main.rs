@@ -1,6 +1,7 @@
 use clap::{Parser, ValueEnum};
 use rust_bril::{
     blocks::CfgGraph,
+    dominance,
     optimizations::{
         self,
         dataflow::run_dataflow_analysis,
@@ -49,6 +50,10 @@ struct Args {
     /// lesson 4: dataflow graphs (prints to stdout and takes as many analyses as you want)
     #[arg(long, value_enum, num_args=1..)]
     dataflow: Option<Vec<DataflowAnalysis>>,
+
+    /// lesson 5: dominator
+    #[arg(long, action)]
+    dominator: bool,
 }
 fn main() {
     let args = Args::parse();
@@ -85,7 +90,8 @@ fn main() {
         let cfg_graphs: Vec<CfgGraph> = function_blocks
             .iter()
             .map(|x| CfgGraph::from(&x))
-            .map(|x| optimizations::lvn::lvn(x))
+            .map(|x| x.prune_unreachable())
+            .map(|x: CfgGraph| optimizations::lvn::lvn(x))
             .map(|x| optimizations::dce::dce(x))
             .collect();
 
@@ -93,15 +99,6 @@ fn main() {
     }
 
     if let Some(analyses) = args.dataflow {
-        // for analysis in &analyses {
-        //     let property: Box<dyn WorklistProperty> = match analysis {
-        //         DataflowAnalysis::InitializedVariables => {
-        //             Box::new(dataflow_properties::InitializedVariables {})
-        //         }
-        //         DataflowAnalysis::LiveVariables => Box::new(dataflow_properties::LiveVariables {}),
-        //     };
-        // }
-
         let function_blocks = program.basic_blocks();
         let cfg_graphs: Vec<CfgGraph> =
             function_blocks.iter().map(|x| CfgGraph::from(&x)).collect();
@@ -129,6 +126,16 @@ fn main() {
                 }
             });
         }
+
+        return;
+    }
+
+    if args.dominator {
+        let function_blocks = program.basic_blocks();
+        function_blocks
+            .iter()
+            .map(|x| CfgGraph::from(&x).prune_unreachable())
+            .for_each(|x| println!("{:?}", dominance::DominanceUtility::from(&x)));
 
         return;
     }

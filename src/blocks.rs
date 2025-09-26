@@ -1,4 +1,7 @@
-use std::{collections::HashMap, fs::File};
+use std::{
+    collections::{HashMap, HashSet},
+    fs::File,
+};
 
 use crate::program::{Argument, Code, EffectOp, Function, Program, Type};
 use serde;
@@ -236,6 +239,37 @@ impl CfgGraph {
         }
     }
 
+    fn reachable_from_entry(&self) -> HashSet<usize> {
+        let mut seen = HashSet::new();
+        let mut stack = vec![0]; // entry is always block 0
+
+        while let Some(v) = stack.pop() {
+            if seen.insert(v) {
+                for &succ in &self.edges[v] {
+                    stack.push(succ);
+                }
+            }
+        }
+
+        seen
+    }
+
+    pub fn prune_unreachable(mut self) -> Self {
+        let reachable = self.reachable_from_entry();
+        // println!("reachable: {:?}", reachable);
+        let reachable_blocks = self
+            .function
+            .basic_blocks
+            .iter()
+            .enumerate()
+            .filter(|(i, _)| reachable.contains(i))
+            .map(|(_, b)| b.clone())
+            .collect::<Vec<BasicBlock>>();
+        self.function.basic_blocks = reachable_blocks;
+
+        CfgGraph::from(&self.function)
+    }
+
     pub fn into_function(self) -> Function {
         Function {
             name: self.function.name,
@@ -279,6 +313,36 @@ impl CfgGraph {
         } else {
             None
         }
+    }
+
+    pub fn num_blocks(&self) -> usize {
+        self.function.basic_blocks.len()
+    }
+
+    /// return true if node b can be reached from node a in the CFG, avoiding forbidden nodes
+    pub fn reachable(&self, node_a: &usize, node_b: &usize, forbidden: &HashSet<usize>) -> bool {
+        let mut visited = HashSet::new();
+        let mut stack = vec![*node_a];
+
+        if forbidden.contains(node_a) {
+            return false;
+        }
+
+        while let Some(current) = stack.pop() {
+            if visited.contains(&current) || forbidden.contains(&current) {
+                continue;
+            }
+
+            visited.insert(current);
+            if current == *node_b {
+                return true;
+            }
+
+            for &neighbor in &self.edges[current] {
+                stack.push(neighbor);
+            }
+        }
+        false
     }
 
     #[allow(dead_code)]

@@ -1,0 +1,13 @@
+@main(a: int, b: int): int {
+.while.cond:
+    mod: int = call @mod a b;
+    zero: int = const 0;
+    is_term: bool = eq mod zero;
+    br is_term .while.finish .while.body;
+.while.body:
+    a: int = id b;
+    b: int = id mod;
+    jmp .while.cond;
+.while.finish:
+    ret b;
+}
