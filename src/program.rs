@@ -42,7 +42,6 @@ pub enum Code {
         position: Option<Position>,
     },
     Constant {
-        // TODO: figure out if can fix this to be always "const"
         op: ConstantOp,
         dest: String,
         #[serde(rename = "type")]
@@ -50,7 +49,6 @@ pub enum Code {
         value: Literal,
     },
     Value {
-        // TODO: replace string op with ValueOp enums
         op: ValueOp,
         dest: String,
         #[serde(rename = "type")]
@@ -63,7 +61,6 @@ pub enum Code {
         labels: Option<Vec<String>>,
     },
     Effect {
-        // TODO: replace string op with EffectOp?
         op: EffectOp,
         #[serde(skip_serializing_if = "Option::is_none")]
         args: Option<Vec<String>>,
