@@ -2,6 +2,7 @@ pub mod blocks;
 pub mod dominance;
 pub mod optimizations;
 pub mod program;
+pub mod ssa;
 
 pub fn transform_print(mut program: program::Program) -> program::Program {
     for function in &mut program.functions {

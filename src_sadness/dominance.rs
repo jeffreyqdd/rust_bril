@@ -1,10 +1,11 @@
 use crate::blocks::CfgGraph;
-use std::collections::HashSet;
+use std::{collections::HashSet, usize};
 
 #[derive(Debug, Clone)]
 pub struct DominanceUtility {
     dom: Vec<HashSet<usize>>,
     tree: Vec<Option<usize>>,
+    tree_children: Vec<HashSet<usize>>,
     df: Vec<HashSet<usize>>,
 }
 
@@ -123,15 +124,35 @@ impl DominanceUtility {
     pub fn from(graph: &CfgGraph) -> Self {
         let dom = DominanceUtility::dom_relationship(graph);
         let tree = DominanceUtility::dom_tree(&dom);
+        let tree_children = tree.iter().enumerate().fold(
+            vec![HashSet::new(); tree.len()],
+            |mut acc, (child, &parent)| {
+                if let Some(p) = parent {
+                    acc[p].insert(child);
+                }
+                acc
+            },
+        );
+
         let df = DominanceUtility::dom_frontier(&dom, graph);
-        let x = Self { dom, tree, df };
-        // println!("{:#?} {}", x, graph.function.name);
-        x
+
+        Self {
+            dom,
+            tree,
+            tree_children,
+            df,
+        }
     }
     /// Return a set of nodes that dominate id
     pub fn dominators(&self, id: usize) -> &HashSet<usize> {
         &self.dom[id]
     }
+
+    /// Return a set of nodes that this node immediately dominates
+    pub fn dominating(&self, id: usize) -> &HashSet<usize> {
+        &self.tree_children[id]
+    }
+
     /// Return the number of nodes in the graph
     pub fn len(&self) -> usize {
         self.dom.len()

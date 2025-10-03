@@ -33,7 +33,7 @@ pub struct Argument {
     pub arg_type: Type,
 }
 
-#[derive(serde::Deserialize, serde::Serialize, Debug, Clone)]
+#[derive(serde::Deserialize, serde::Serialize, Debug, Clone, PartialEq, Eq, PartialOrd)]
 #[serde(untagged)]
 pub enum Code {
     Label {
@@ -84,19 +84,23 @@ pub enum Code {
     },
 }
 
-#[derive(serde::Deserialize, serde::Serialize, Debug, Clone, Copy, PartialEq, Eq, Hash)]
+#[derive(
+    serde::Deserialize, serde::Serialize, Debug, Clone, Copy, PartialEq, Eq, Hash, PartialOrd,
+)]
 #[serde(rename_all = "lowercase")]
 pub enum Noop {
     Nop,
 }
 
-#[derive(serde::Deserialize, serde::Serialize, Debug, Clone, Copy, PartialEq, Eq, Hash)]
+#[derive(
+    serde::Deserialize, serde::Serialize, Debug, Clone, Copy, PartialEq, Eq, Hash, PartialOrd,
+)]
 #[serde(rename_all = "lowercase")]
 pub enum ConstantOp {
     Const,
 }
 
-#[derive(serde::Deserialize, serde::Serialize, Debug, Clone, Copy)]
+#[derive(serde::Deserialize, serde::Serialize, Debug, Clone, PartialOrd)]
 #[serde(rename_all = "lowercase")]
 pub enum ValueOp {
     Add,
@@ -131,6 +135,7 @@ pub enum ValueOp {
     Float2bits,
     Bits2float,
     Call,
+    Phi,
 }
 
 impl Literal {
@@ -273,7 +278,9 @@ impl Hash for ValueOp {
     }
 }
 
-#[derive(serde::Deserialize, serde::Serialize, Debug, Clone, Copy, PartialEq, Eq, Hash)]
+#[derive(
+    serde::Deserialize, serde::Serialize, Debug, Clone, Copy, PartialEq, Eq, Hash, PartialOrd,
+)]
 #[serde(rename_all = "lowercase")]
 pub enum MemoryOp {
     Alloc,
@@ -283,7 +290,7 @@ pub enum MemoryOp {
     PtrAdd,
 }
 
-#[derive(serde::Deserialize, serde::Serialize, Debug, Clone, Copy)]
+#[derive(serde::Deserialize, serde::Serialize, Debug, Clone, Copy, PartialOrd)]
 #[serde(rename_all = "lowercase")]
 pub enum EffectOp {
     Jmp,
@@ -317,7 +324,7 @@ impl Hash for EffectOp {
     }
 }
 
-#[derive(serde::Deserialize, serde::Serialize, Debug, Clone, PartialEq, Eq, Hash)]
+#[derive(serde::Deserialize, serde::Serialize, Debug, Clone, PartialEq, Eq, Hash, PartialOrd)]
 #[serde(rename_all = "lowercase")]
 pub enum Type {
     Int,
@@ -328,7 +335,7 @@ pub enum Type {
     None,
 }
 
-#[derive(serde::Deserialize, serde::Serialize, Debug, Clone)]
+#[derive(serde::Deserialize, serde::Serialize, Debug, Clone, PartialEq, Eq, PartialOrd)]
 pub struct Position {
     pub pos: RowCol,
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -337,7 +344,7 @@ pub struct Position {
     pub src: Option<String>,
 }
 
-#[derive(serde::Deserialize, serde::Serialize, Debug, Clone, Copy)]
+#[derive(serde::Deserialize, serde::Serialize, Debug, Clone, Copy, PartialEq, Eq, PartialOrd)]
 pub struct RowCol {
     pub row: u64,
     pub col: u64,

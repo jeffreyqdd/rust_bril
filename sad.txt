@@ -1,0 +1,315 @@
+CfgGraph {
+    function: FunctionBlock {
+        name: "swappy",
+        args: None,
+        return_type: None,
+        basic_blocks: [
+            BasicBlock {
+                label: "no_label_d74cdf43-0c1f-41dd-91dc-00e9ae343909",
+                block: [
+                    Constant {
+                        op: Const,
+                        dest: "i_0",
+                        constant_type: Int,
+                        value: Int(
+                            5,
+                        ),
+                    },
+                    Constant {
+                        op: Const,
+                        dest: "one_0",
+                        constant_type: Int,
+                        value: Int(
+                            1,
+                        ),
+                    },
+                    Constant {
+                        op: Const,
+                        dest: "zero_0",
+                        constant_type: Int,
+                        value: Int(
+                            0,
+                        ),
+                    },
+                    Constant {
+                        op: Const,
+                        dest: "x_0",
+                        constant_type: Int,
+                        value: Int(
+                            0,
+                        ),
+                    },
+                    Constant {
+                        op: Const,
+                        dest: "y_0",
+                        constant_type: Int,
+                        value: Int(
+                            1,
+                        ),
+                    },
+                ],
+                terminator: Passthrough,
+                external_references: [],
+            },
+            BasicBlock {
+                label: "l0",
+                block: [
+                    Label {
+                        label: "l0",
+                        position: None,
+                    },
+                    Value {
+                        op: Phi(
+                            "y",
+                        ),
+                        dest: "y_1",
+                        value_type: None,
+                        args: Some(
+                            [
+                                "y_0",
+                                "y_2",
+                            ],
+                        ),
+                        funcs: None,
+                        labels: Some(
+                            [
+                                "no_label_d74cdf43-0c1f-41dd-91dc-00e9ae343909",
+                                "l1",
+                            ],
+                        ),
+                    },
+                    Value {
+                        op: Phi(
+                            "x",
+                        ),
+                        dest: "x_1",
+                        value_type: None,
+                        args: Some(
+                            [
+                                "x_0",
+                                "x_2",
+                            ],
+                        ),
+                        funcs: None,
+                        labels: Some(
+                            [
+                                "no_label_d74cdf43-0c1f-41dd-91dc-00e9ae343909",
+                                "l1",
+                            ],
+                        ),
+                    },
+                    Value {
+                        op: Gt,
+                        dest: "cond_0",
+                        value_type: Bool,
+                        args: Some(
+                            [
+                                "i_0",
+                                "zero_0",
+                            ],
+                        ),
+                        funcs: None,
+                        labels: None,
+                    },
+                    Value {
+                        op: Sub,
+                        dest: "i_1",
+                        value_type: Int,
+                        args: Some(
+                            [
+                                "i_0",
+                                "one_0",
+                            ],
+                        ),
+                        funcs: None,
+                        labels: None,
+                    },
+                    Effect {
+                        op: Br,
+                        args: Some(
+                            [
+                                "cond_0",
+                            ],
+                        ),
+                        funcs: None,
+                        labels: Some(
+                            [
+                                "l1",
+                                "end",
+                            ],
+                        ),
+                    },
+                ],
+                terminator: Br(
+                    "l1",
+                    "end",
+                ),
+                external_references: [
+                    "i",
+                    "zero",
+                    "i",
+                    "one",
+                ],
+            },
+            BasicBlock {
+                label: "l1",
+                block: [
+                    Label {
+                        label: "l1",
+                        position: None,
+                    },
+                    Value {
+                        op: Id,
+                        dest: "x_2",
+                        value_type: Int,
+                        args: Some(
+                            [
+                                "x_1",
+                            ],
+                        ),
+                        funcs: None,
+                        labels: None,
+                    },
+                    Value {
+                        op: Id,
+                        dest: "y_2",
+                        value_type: Int,
+                        args: Some(
+                            [
+                                "y_1",
+                            ],
+                        ),
+                        funcs: None,
+                        labels: None,
+                    },
+                    Effect {
+                        op: Print,
+                        args: Some(
+                            [
+                                "x1",
+                                "y1",
+                            ],
+                        ),
+                        funcs: None,
+                        labels: None,
+                    },
+                    Effect {
+                        op: Jmp,
+                        args: None,
+                        funcs: None,
+                        labels: Some(
+                            [
+                                "l0",
+                            ],
+                        ),
+                    },
+                ],
+                terminator: Jmp(
+                    "l0",
+                ),
+                external_references: [
+                    "x",
+                    "y",
+                    "x1",
+                    "y1",
+                ],
+            },
+            BasicBlock {
+                label: "end",
+                block: [
+                    Label {
+                        label: "end",
+                        position: None,
+                    },
+                ],
+                terminator: Passthrough,
+                external_references: [],
+            },
+        ],
+    },
+    edges: [
+        [
+            1,
+        ],
+        [
+            2,
+            3,
+        ],
+        [
+            1,
+        ],
+        [],
+    ],
+    predecessors: [
+        [],
+        [
+            0,
+            2,
+        ],
+        [
+            1,
+        ],
+        [
+            1,
+        ],
+    ],
+    label_map: {
+        "l1": 2,
+        "no_label_d74cdf43-0c1f-41dd-91dc-00e9ae343909": 0,
+        "l0": 1,
+        "end": 3,
+    },
+}
+DominanceUtility {
+    dom: [
+        {
+            0,
+        },
+        {
+            1,
+            0,
+        },
+        {
+            1,
+            2,
+            0,
+        },
+        {
+            1,
+            3,
+            0,
+        },
+    ],
+    tree: [
+        None,
+        Some(
+            0,
+        ),
+        Some(
+            1,
+        ),
+        Some(
+            1,
+        ),
+    ],
+    tree_children: [
+        {
+            1,
+        },
+        {
+            3,
+            2,
+        },
+        {},
+        {},
+    ],
+    df: [
+        {},
+        {},
+        {
+            1,
+        },
+        {},
+    ],
+}
+{"functions":[{"name":"swappy","instrs":[{"op":"const","dest":"i_0","type":"int","value":5},{"op":"const","dest":"one_0","type":"int","value":1},{"op":"const","dest":"zero_0","type":"int","value":0},{"op":"const","dest":"x_0","type":"int","value":0},{"op":"const","dest":"y_0","type":"int","value":1},{"label":"l0"},{"op":{"phi":"y"},"dest":"y_1","type":"none","args":["y_0","y_2"],"labels":["no_label_d74cdf43-0c1f-41dd-91dc-00e9ae343909","l1"]},{"op":{"phi":"x"},"dest":"x_1","type":"none","args":["x_0","x_2"],"labels":["no_label_d74cdf43-0c1f-41dd-91dc-00e9ae343909","l1"]},{"op":"gt","dest":"cond_0","type":"bool","args":["i_0","zero_0"]},{"op":"sub","dest":"i_1","type":"int","args":["i_0","one_0"]},{"op":"br","args":["cond_0"],"labels":["l1","end"]},{"label":"l1"},{"op":"id","dest":"x_2","type":"int","args":["x_1"]},{"op":"id","dest":"y_2","type":"int","args":["y_1"]},{"op":"print","args":["x1","y1"]},{"op":"jmp","labels":["l0"]},{"label":"end"}]}]}

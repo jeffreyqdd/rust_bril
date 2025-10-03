@@ -8,7 +8,7 @@ use rust_bril::{
         dataflow_properties::{InitializedVariables, LiveVariables},
     },
     program::Program,
-    transform_print,
+    ssa, transform_print,
 };
 
 #[derive(ValueEnum, Clone, Debug, PartialEq, Eq)]
@@ -54,6 +54,10 @@ struct Args {
     /// lesson 5: dominator
     #[arg(long, action)]
     dominator: bool,
+
+    /// lesson 6: static single assignment
+    #[arg(long, action)]
+    ssa: bool,
 }
 fn main() {
     let args = Args::parse();
@@ -94,6 +98,22 @@ fn main() {
             .map(|x: CfgGraph| optimizations::lvn::lvn(x))
             .map(|x| optimizations::dce::dce(x))
             .collect();
+
+        program = Program::from(cfg_graphs);
+    }
+
+    if args.ssa {
+        let function_blocks = program.basic_blocks();
+        let cfg_graphs: Vec<CfgGraph> = function_blocks
+            .iter()
+            .map(|x| CfgGraph::from(&x))
+            .map(|x| x.prune_unreachable())
+            .map(|x| ssa::to_ssa(&x))
+            .map(|x| ssa::from_ssa(x))
+            .collect();
+        //     .map(|x: CfgGraph| optimizations::lvn::lvn(x))
+        //     .map(|x| optimizations::dce::dce(x))
+        //     .collect();
 
         program = Program::from(cfg_graphs);
     }

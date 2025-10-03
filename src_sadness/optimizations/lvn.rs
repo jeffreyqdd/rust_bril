@@ -3,15 +3,45 @@ use std::collections::HashMap;
 use std::vec::Vec;
 use uuid::Uuid;
 
-use crate::program::{Code, ConstantOp, EffectOp, Literal, MemoryOp, Type, ValueOp};
+use crate::{
+    optimizations::dataflow_properties::WorklistProperty,
+    program::{Code, ConstantOp, EffectOp, Literal, MemoryOp, Type, ValueOp},
+};
+
+struct LocalValueNumbering;
+impl WorklistProperty for LocalValueNumbering {
+    type Domain = (LocalValueNumberingTable, Option<crate::blocks::BasicBlock>);
+
+    fn init() -> Self::Domain {
+        (LocalValueNumberingTable::new(), None)
+    }
+
+    fn deterministic_array(domain: &Self::Domain) -> Vec<String> {
+        Vec::new() // not used
+    }
+
+    fn is_forward(&self) -> bool {
+        true
+    }
+
+    fn merge(&self, predecessors: &Vec<Self::Domain>) -> Self::Domain {
+        todo!()
+    }
+
+    fn transfer(&self, domain: &Self::Domain, block: &crate::blocks::BasicBlock) -> Self::Domain {
+        let (new_domain, new_block) =
+            lvn_on_block(&domain.0, domain.1.clone().unwrap_or_else(|| block.clone()));
+        (new_domain, Some(new_block))
+    }
+}
 
 pub fn lvn(mut cfg: crate::blocks::CfgGraph) -> crate::blocks::CfgGraph {
-    cfg.function.basic_blocks = cfg
-        .function
-        .basic_blocks
-        .into_iter()
-        .map(|block| lvn_on_block(block))
-        .collect();
+    // cfg.function.basic_blocks = cfg
+    //     .function
+    //     .basic_blocks
+    //     .into_iter()
+    //     .map(|block| lvn_on_block(block))
+    //     .collect();
 
     cfg
 }
@@ -19,7 +49,7 @@ pub fn lvn(mut cfg: crate::blocks::CfgGraph) -> crate::blocks::CfgGraph {
 /// Mangling is a mapping from variables to mangled variables and vice versa
 /// The reason for mangling is to avoid collisions when there are multiple declarations of the same variable name
 /// This workaround also allows us to preserve the original variable name for later use and to not break other blocks and/or optimizations.
-#[derive(Debug)]
+#[derive(Debug, PartialEq, Eq, Clone)]
 struct Mangling {
     variable_to_mangled: HashMap<String, String>,
     mangled_to_variable: HashMap<String, String>,
@@ -100,17 +130,10 @@ enum CanonicalHome {
     Variable(String),
 }
 
-trait SemanticalReasononing: std::fmt::Debug {
-    fn is_commutative(&self, operation: &Operation) -> bool;
-    fn is_copy(&self, operation: &Operation) -> bool;
-    fn can_constexpr(&self, operation: &Operation) -> bool;
-    fn eval_constexpr(&self, op: &Operation, t: &Type, literals: &Vec<Literal>) -> Literal;
-}
-
-#[derive(Debug)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 struct BrilSemantics;
-impl SemanticalReasononing for BrilSemantics {
-    fn is_commutative(&self, operation: &Operation) -> bool {
+impl BrilSemantics {
+    fn is_commutative(operation: &Operation) -> bool {
         match operation {
             Operation::Value(value_op) => match value_op {
                 ValueOp::And
@@ -130,14 +153,14 @@ impl SemanticalReasononing for BrilSemantics {
         }
     }
 
-    fn is_copy(&self, operation: &Operation) -> bool {
+    fn is_copy(operation: &Operation) -> bool {
         match operation {
             Operation::Value(ValueOp::Id) => true,
             _ => false,
         }
     }
 
-    fn can_constexpr(&self, operation: &Operation) -> bool {
+    fn can_constexpr(operation: &Operation) -> bool {
         match operation {
             Operation::Value(value_op) => match value_op {
                 ValueOp::Add
@@ -179,8 +202,8 @@ impl SemanticalReasononing for BrilSemantics {
         }
     }
 
-    fn eval_constexpr(&self, op: &Operation, _t: &Type, literals: &Vec<Literal>) -> Literal {
-        assert!(self.can_constexpr(op));
+    fn eval_constexpr(op: &Operation, _t: &Type, literals: &Vec<Literal>) -> Literal {
+        assert!(BrilSemantics::can_constexpr(op));
         match op {
             Operation::Value(value_op) => match value_op {
                 ValueOp::Add => literals[0].cast_to(&Type::Int) + literals[1].cast_to(&Type::Int),
@@ -230,7 +253,7 @@ impl SemanticalReasononing for BrilSemantics {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, PartialEq, Eq, Clone)]
 struct LocalValueNumberingTable {
     // mangles variable names coming in and out of Canonical Home
     mangler: Mangling,
@@ -243,9 +266,6 @@ struct LocalValueNumberingTable {
 
     /// maps id to ch
     canonical_home: Vec<CanonicalHome>,
-
-    /// semantical processing of arguments
-    semantical_reasoning: Box<dyn SemanticalReasononing>,
 }
 
 impl LocalValueNumberingTable {
@@ -255,7 +275,6 @@ impl LocalValueNumberingTable {
             cloud: HashMap::new(),
             table: HashMap::new(),
             canonical_home: vec![],
-            semantical_reasoning: Box::new(BrilSemantics {}),
         }
     }
 
@@ -315,11 +334,11 @@ impl LocalValueNumberingTable {
             Expr::ConstExpr(..) => expr.clone(),
             Expr::Expr(t, op, items) => {
                 let mut new_items = items.clone();
-                if self.semantical_reasoning.is_commutative(op) {
+                if BrilSemantics::is_commutative(op) {
                     new_items.sort();
                 }
 
-                if self.semantical_reasoning.is_copy(op) {
+                if BrilSemantics::is_copy(op) {
                     // TODO: semantic reasoning
                 }
 
@@ -393,7 +412,7 @@ impl LocalValueNumberingTable {
                     CanonicalHome::ConstExpr(t.clone(), l.clone(), mangled.clone())
                 }
                 Expr::Expr(t, o, args) => {
-                    if self.semantical_reasoning.can_constexpr(o) {
+                    if BrilSemantics::can_constexpr(o) {
                         // see if all args are constexpr
                         let mut constexpr_literals = Vec::new();
                         let can_constexpr_fold = args
@@ -414,9 +433,7 @@ impl LocalValueNumberingTable {
                             // println!("\t=>ch: {:?}", self.canonical_home);
                             // println!("\t-=> can fold: {:?}", constexpr_literals);
 
-                            let result =
-                                self.semantical_reasoning
-                                    .eval_constexpr(o, t, &constexpr_literals);
+                            let result = BrilSemantics::eval_constexpr(o, t, &constexpr_literals);
                             let expr = CanonicalHome::ConstExpr(
                                 t.clone(),
                                 result.clone(),
@@ -459,8 +476,11 @@ impl LocalValueNumberingTable {
     }
 }
 
-fn lvn_on_block(mut basic_block: crate::blocks::BasicBlock) -> crate::blocks::BasicBlock {
-    let mut lvn_state = LocalValueNumberingTable::new();
+fn lvn_on_block(
+    state: &LocalValueNumberingTable,
+    mut basic_block: crate::blocks::BasicBlock,
+) -> (LocalValueNumberingTable, crate::blocks::BasicBlock) {
+    let mut lvn_state = state.clone();
 
     let mut new_block = vec![];
     // println!("======================= new block ==============");
@@ -505,7 +525,7 @@ fn lvn_on_block(mut basic_block: crate::blocks::BasicBlock) -> crate::blocks::Ba
                 let abstract_args = lvn_state.to_abstract_args_list(&concrete_args);
                 let expr = Expr::Expr(
                     value_type.clone(),
-                    Operation::Value(*op),
+                    Operation::Value(op.clone()),
                     abstract_args.clone(),
                 );
                 let before = Some(lvn_state.from_abstract_args_list(&abstract_args));
@@ -598,5 +618,5 @@ fn lvn_on_block(mut basic_block: crate::blocks::BasicBlock) -> crate::blocks::Ba
     }
 
     basic_block.block = new_block;
-    basic_block
+    (lvn_state, basic_block)
 }

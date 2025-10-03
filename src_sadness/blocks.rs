@@ -9,7 +9,7 @@ use serde_json;
 
 /// Chunk program into basic block
 
-#[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
+#[derive(Debug, Clone, serde::Serialize, serde::Deserialize, PartialEq, PartialOrd, Eq)]
 pub enum Terminator {
     Passthrough,
     Ret,
@@ -18,7 +18,7 @@ pub enum Terminator {
 }
 
 #[allow(dead_code)]
-#[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
+#[derive(Debug, Clone, serde::Serialize, serde::Deserialize, PartialEq, PartialOrd, Eq)]
 pub struct BasicBlock {
     pub label: String,
     pub block: Vec<Code>,
@@ -286,14 +286,15 @@ impl CfgGraph {
     }
 
     /// None variable if node dne
-    pub fn predecessors(&self, node: &str) -> Option<Vec<&BasicBlock>> {
+    pub fn predecessors(&mut self, node: &str) -> Option<Vec<&mut BasicBlock>> {
         let id = self.label_map.get(node);
 
         if let Some(id) = id {
+            // let p = &mut self.predecessors[*id];
             let ret = self.predecessors[*id]
                 .iter()
-                .map(|u| &self.function.basic_blocks[*u])
-                .collect::<Vec<&BasicBlock>>();
+                .map(|u| self.function.basic_blocks[*u])
+                .collect::<Vec<&mut BasicBlock>>();
             Some(ret)
         } else {
             None
