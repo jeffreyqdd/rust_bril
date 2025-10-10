@@ -1,8 +1,0 @@
-# ARGS: -p
-@main {
-    a: int = const 4;
-    jmp .label1;
-    a: int = const 5;
-.label1:
-    print a;
-}

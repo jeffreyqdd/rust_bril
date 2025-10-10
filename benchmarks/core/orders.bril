@@ -1,9 +1,3 @@
-# For a cyclic group Zn of integers modulo n with the group operation addition (module n)
-# compute the order of each element u in Zn
-# ord(u) = n/gcd(u,n)=lcm(u,n)/u
-
-# Compute the absolute value of a number
-# if a < 0 then a * -1 else a
 @abs(a: int): int {
   zero: int = const 0;
   is_neg: bool = lt a zero;
