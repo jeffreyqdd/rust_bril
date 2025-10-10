@@ -1,4 +1,5 @@
-pub mod dataflow;
-pub mod dataflow_properties;
-pub mod dce;
-pub mod lvn;
+mod dce;
+mod lvn;
+
+pub use dce::*;
+pub use lvn::*;

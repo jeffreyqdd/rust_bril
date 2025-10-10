@@ -1,86 +1,129 @@
 /// Module for dead code elimination, make sure to run after local variable numbering
-use std::vec;
+use std::{collections::HashSet, vec};
 
-use crate::optimizations::dataflow::run_dataflow_analysis;
-use crate::optimizations::dataflow_properties::LiveVariables;
-use crate::{blocks, program};
+use crate::{
+    dataflow::{run_dataflow_analysis, WorklistProperty, WorklistResult},
+    representation::{AbstractFunction, BlockId, Code, Terminator},
+};
 
-pub fn dce(mut cfg: blocks::CfgGraph) -> blocks::CfgGraph {
-    // for each function iterate backwards and delete code that is
-    // not referenced anywhere else
+// iterating until all variables are referenced
+struct Dce {}
 
-    let mut referenced_variables = std::collections::HashSet::new();
+impl WorklistProperty for Dce {
+    // the set of variables that are referenced in the future
+    type Domain = HashSet<String>;
 
-    // for cfg.referenced_variables
-    let successor_references = run_dataflow_analysis(cfg.clone(), LiveVariables {});
+    fn init(_: usize, af: &AbstractFunction) -> Self::Domain {
+        let mut top = HashSet::new();
 
-    for (idx, basic_block) in cfg.function.basic_blocks.iter_mut().enumerate() {
-        referenced_variables.clear();
-        for i in &successor_references[idx].output {
-            referenced_variables.insert(i.clone());
-        }
-
-        let mut new_basic_block = vec![];
-        for (_idx, instruction) in basic_block.block.iter().rev().enumerate() {
-            // println!("checking instruction {:?}", instruction);
-            match instruction {
-                program::Code::Label { .. } | program::Code::Noop { .. } => {
-                    new_basic_block.push(instruction.clone())
-                }
-                program::Code::Constant { dest, .. } => {
-                    if referenced_variables.contains(dest) {
-                        // only push if referenced
-                        new_basic_block.push(instruction.clone());
-                        // println!("pushing {:?}", instruction);
-                        referenced_variables.remove(dest);
-                    }
-                }
-                program::Code::Value { dest, args, .. } => {
-                    if referenced_variables.contains(dest) {
-                        referenced_variables.remove(dest);
-                        for i in args.iter().flatten() {
-                            referenced_variables.insert(i.clone());
-                            // println!("referencing {:?}", i);
-                        }
-
-                        // only push if referenced
-                        new_basic_block.push(instruction.clone());
-                        // println!("pushing {:?}", instruction);
-                    }
-                }
-                program::Code::Effect { args, .. } => {
-                    new_basic_block.push(instruction.clone());
-                    for i in args.iter().flatten() {
-                        referenced_variables.insert(i.clone());
-                        // println!("referencing {:?}", i);
-                    }
-
-                    // push because effect operations have "side effects"
-                    // println!("pushing {:?}", instruction);
-                }
-                program::Code::Memory { args, dest, .. } => {
-                    if dest.is_none() {
-                        for i in args.iter().flatten() {
-                            referenced_variables.insert(i.clone());
-                        }
-                        new_basic_block.push(instruction.clone());
-                        continue;
-                    }
-
-                    if referenced_variables.contains(dest.as_ref().unwrap()) {
-                        referenced_variables.remove(dest.as_ref().unwrap());
-                        for i in args.iter().flatten() {
-                            referenced_variables.insert(i.clone());
-                        }
-
-                        new_basic_block.push(instruction.clone());
-                    }
-                }
+        if let Some(arguments) = af.args.as_ref() {
+            for arg in arguments {
+                top.insert(arg.name.clone());
             }
         }
-        new_basic_block.reverse();
-        basic_block.block = new_basic_block;
+
+        for b in af.cfg.basic_blocks.iter() {
+            for instruction in b.instructions.iter() {
+                if let Some(dest) = instruction.get_destination() {
+                    top.insert(dest.to_string());
+                }
+            }
+
+            for phi in b.phi_nodes.iter() {
+                top.insert(phi.dest.clone());
+            }
+        }
+
+        top
     }
 
-    cfg
+    fn is_forward() -> bool {
+        false
+    }
+
+    fn merge(predecessors: Vec<(&BlockId, &Self::Domain)>) -> WorklistResult<Self::Domain> {
+        // all variables live in successor block are live going into this block
+        if predecessors.is_empty() {
+            return Ok(HashSet::new());
+        }
+
+        let mut iter = predecessors.into_iter();
+        let first = iter.next().unwrap().1.clone();
+
+        Ok(iter.fold(first, |mut acc, elem| {
+            acc.extend(elem.1.iter().cloned());
+            acc
+        }))
+    }
+
+    fn transfer(
+        domain: Self::Domain,
+        block: &mut crate::representation::BasicBlock,
+        _: Option<&Vec<crate::representation::Argument>>,
+    ) -> WorklistResult<Self::Domain> {
+        // iterate backwards through the instructions
+        //      1. process definitions first (remove from live set)
+        //      2. then process arguments (add to live set)
+
+        let mut domain_view: HashSet<&str> = domain.iter().map(|s| s.as_str()).collect();
+
+        match &block.terminator {
+            Terminator::Ret(Code::Effect { args: Some(a), .. }) => {
+                domain_view.extend(a.iter().map(|s| s.as_str()));
+            }
+            Terminator::Br(_, _, Code::Effect { args: Some(a), .. }) => {
+                domain_view.extend(a.iter().map(|s| s.as_str()));
+            }
+            _ => (),
+        }
+
+        let mut new_instructions = vec![];
+        for instructions in block.instructions.iter().rev() {
+            if let Some(dest) = instructions.get_destination() {
+                if !domain_view.contains(dest) {
+                    continue;
+                }
+            }
+
+            if let Some(dest) = instructions.get_destination() {
+                domain_view.remove(dest);
+            }
+
+            if let Some(args) = instructions.get_arguments() {
+                domain_view.extend(args.iter().map(|s| s.as_str()));
+            }
+
+            new_instructions.push(instructions.clone());
+        }
+
+        // phi nodes
+        let mut new_phi = vec![];
+        for phi in block.phi_nodes.iter() {
+            if !domain_view.contains(phi.dest.as_str()) {
+                continue;
+            }
+
+            domain_view.remove(phi.dest.as_str());
+
+            for (var, _) in phi.phi_args.iter() {
+                domain_view.insert(var.as_str());
+            }
+
+            new_phi.push(phi.clone());
+        }
+
+        new_phi.reverse();
+        new_instructions.reverse();
+
+        let ret = Ok(domain_view.into_iter().map(|s| s.to_string()).collect());
+        block.phi_nodes = new_phi;
+        block.instructions = new_instructions;
+        return ret;
+    }
+}
+
+pub fn dce(mut af: AbstractFunction) -> WorklistResult<AbstractFunction> {
+    log::info!("running DCE on function {}", af.name);
+    run_dataflow_analysis::<Dce>(&mut af)?;
+    Ok(af)
 }

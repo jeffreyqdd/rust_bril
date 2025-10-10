@@ -1,38 +1,20 @@
-TRANSFORM_FIXTURES := tests/fixtures/*.json
-PARSE_FIXTURES := tests/parse/*.bril
-DCE_LVN_FIXTURES := tests/dce_lvn/*.bril
-DATAFLOW_FIXTURES := tests/dataflow/*.bril
 ALL_BENCHMARKS := benchmarks/**/*.bril
 
-test:
+check:
 	cargo build --release
-	cargo test --quiet
-	turnt --env transform $(TRANSFORM_FIXTURES) --parallel
-	turnt --env parse $(PARSE_FIXTURES) --parallel
-	turnt --env dce_lvn $(DCE_LVN_FIXTURES) --parallel
-	turnt --env dataflow_initialized_variables $(DATAFLOW_FIXTURES) --parallel
-	turnt --env dataflow_live_variables $(DATAFLOW_FIXTURES) --parallel
-.PHONY: test
-
-bench-check:
-	cargo build --release
-	turnt --env bench_check $(ALL_BENCHMARKS) --parallel --verbose
+	turnt --env check_ssa $(ALL_BENCHMARKS) --parallel --verbose
+	turnt --env check_dce $(ALL_BENCHMARKS) --parallel --verbose
+	turnt --env check_lvn_dce $(ALL_BENCHMARKS) --parallel --verbose
 .PHONY: bench-check 
 
-bench-local:
+bench: 
 	cargo build --release
-	turnt --env bench_local $(ALL_BENCHMARKS) --parallel --verbose
-.PHONY: bench-local
+	turnt --env bench_reference $(ALL_BENCHMARKS) --parallel --save
+	turnt --env bench_ssa $(ALL_BENCHMARKS) --parallel --save
+	turnt --env bench_ssa_dce $(ALL_BENCHMARKS) --parallel --save
+	turnt --env bench_ssa_lvn_dce $(ALL_BENCHMARKS) --parallel --save
 
-gen-test: 
-	turnt --env parse_baseline $(PARSE_FIXTURES) --parallel --save
-	turnt --env dce_lvn_baseline $(DCE_LVN_FIXTURES) --parallel --save
-	turnt --env dataflow_initialized_variables $(DATAFLOW_FIXTURES) --parallel --save
-	turnt --env dataflow_live_variables $(DATAFLOW_FIXTURES) --parallel --save
-.PHONY: gen-test
+gen-check:
+	turnt --env check_reference $(ALL_BENCHMARKS) --parallel --save
 
-gen-bench:
-	turnt --env bench_baseline $(ALL_BENCHMARKS) --parallel --save
-	turnt --env bench_baseline_profile $(ALL_BENCHMARKS) --parallel --save
-	turnt --env bench_local_profile $(ALL_BENCHMARKS) --parallel --save
 .PHONY: gen-bench

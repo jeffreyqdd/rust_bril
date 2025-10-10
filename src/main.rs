@@ -1,148 +1,157 @@
 use clap::{Parser, ValueEnum};
+use log::LevelFilter;
 use rust_bril::{
-    blocks::CfgGraph,
-    dominance,
-    optimizations::{
-        self,
-        dataflow::run_dataflow_analysis,
-        dataflow_properties::{InitializedVariables, LiveVariables},
-    },
-    program::Program,
-    transform_print,
+    bril_logger,
+    optimizations::{dce, lvn},
 };
+use std::path::Path;
 
-#[derive(ValueEnum, Clone, Debug, PartialEq, Eq)]
-enum DataflowAnalysis {
-    /// set of variables that are initialized by the end of each basic block
-    InitializedVariables,
+// use rust_bril::{
+//     blocks::CfgGraph,
+//     dominance,
+//     optimizations::{
+//         self,
+//         dataflow::run_dataflow_analysis,
+//         dataflow_properties::{InitializedVariables, LiveVariables},
+//     },
+//     program::Program,
+//     ssa, transform_print,
+// };
 
-    /// set of variables that are referenced at some point in the future
-    LiveVariables,
+#[derive(ValueEnum, Clone, Copy, Debug, PartialEq, Eq)]
+enum LogLevel {
+    /// Trace level logging (most verbose)
+    Trace,
+    /// Debug level logging
+    Debug,
+    /// Info level logging (default)
+    Info,
+    /// Warning level logging
+    Warn,
+    /// Error level logging
+    Error,
+    /// No logging
+    Off,
 }
+
+// #[derive(ValueEnum, Clone, Debug, PartialEq, Eq)]
+// enum DataflowAnalysis {
+//     /// set of variables that are initialized by the end of each basic block
+//     InitializedVariables,
+
+//     /// set of variables that are referenced at some point in the future
+//     LiveVariables,
+// }
 
 #[derive(Parser, Debug)]
 #[command(version, about, long_about = None)]
 struct Args {
     /// Input file (if omitted, read from stdin). If the file extension is .bril, will run bril2json to convert to json
-    #[arg(short, long)]
-    file: Option<String>,
+    // make this positional
+    file: String,
 
-    /// output file after running optimization passes (if omitted, write to stdout)
-    /// If the file extension is .bril, will run bril2txt to convert to text
     #[arg(short, long)]
     output: Option<String>,
-    /// parse and print to stdout
+
+    /// Set the log level (trace, debug, info, warn, error, off)
+    #[arg(long, value_enum, default_value = "info")]
+    log_level: LogLevel,
+
+    /// Don't push out of SSA form
+    #[arg(short = 'S', action)]
+    show_ssa: bool,
+
+    /// Run dead code elimination
     #[arg(long, action)]
-    parse: bool,
+    dce: bool,
 
-    /// lesson2: transform, which will add print statements before every `jmp` and `br` instruction
-    #[clap(long, action)]
-    transform_print: bool,
-
-    /// lesson2: construct cfg and write to file (will write to stdout if no file is provided)
-    #[clap(long, num_args = 0..=1)]
-    construct_cfg: Option<Vec<String>>,
-
-    /// lesson 3: local optimization (DCE) (will write to stdout if no file is provided)
+    /// Run local value numbering
     #[arg(long, action)]
-    local: bool,
-
-    /// lesson 4: dataflow graphs (prints to stdout and takes as many analyses as you want)
-    #[arg(long, value_enum, num_args=1..)]
-    dataflow: Option<Vec<DataflowAnalysis>>,
-
-    /// lesson 5: dominator
-    #[arg(long, action)]
-    dominator: bool,
+    lvn: bool,
 }
+
+impl From<LogLevel> for LevelFilter {
+    fn from(log_level: LogLevel) -> Self {
+        match log_level {
+            LogLevel::Trace => LevelFilter::Trace,
+            LogLevel::Debug => LevelFilter::Debug,
+            LogLevel::Info => LevelFilter::Info,
+            LogLevel::Warn => LevelFilter::Warn,
+            LogLevel::Error => LevelFilter::Error,
+            LogLevel::Off => LevelFilter::Off,
+        }
+    }
+}
+
 fn main() {
     let args = Args::parse();
 
-    // parse program
-    let mut program = match args.file {
-        Some(filename) => Program::from_file(&filename),
-        None => Program::from_stdin(),
+    if let Err(e) = bril_logger::init_logger(args.log_level.into()) {
+        eprintln!("Failed to initialize logger: {}", e);
+        std::process::exit(1);
+    }
+
+    // parse into program
+    let time_start = std::time::Instant::now();
+    let file_paths = Path::new(&args.file);
+    let rich_program = match rust_bril::representation::RichProgram::from_file(file_paths) {
+        Ok(p) => p,
+        Err(e) => {
+            log::error!("Failed to load program from file '{}': {}", args.file, e);
+            std::process::exit(1);
+        }
+    };
+    log::info!(
+        "loaded program from '{}' in {:?}",
+        args.file,
+        time_start.elapsed()
+    );
+
+    // convert into SSA form
+    let mut abstract_program = rust_bril::representation::RichAbstractProgram::from(rich_program);
+
+    // run optimizations
+    if args.lvn {
+        abstract_program.program.functions = abstract_program
+            .program
+            .functions
+            .into_iter()
+            .map(|(n, af)| match lvn(af) {
+                Ok(af_new) => (n, af_new),
+                Err(e) => e.error_with_context_then_exit(&abstract_program.original_text),
+            })
+            .collect();
+    }
+
+    if args.dce {
+        abstract_program.program.functions = abstract_program
+            .program
+            .functions
+            .into_iter()
+            .map(|(n, af)| match dce(af) {
+                Ok(af_new) => (n, af_new),
+                Err(e) => e.error_with_context_then_exit(&abstract_program.original_text),
+            })
+            .collect();
+    }
+
+    // convert out of SSA form
+    let final_program = if args.show_ssa {
+        abstract_program.into_ssa_program()
+    } else {
+        abstract_program.into_program()
     };
 
-    if args.parse {
-        println!("{:#?}", program);
-    }
-
-    if args.transform_print {
-        program = transform_print(program);
-    }
-
-    if let Some(filepath) = args.construct_cfg {
-        let function_blocks = program.basic_blocks();
-        let cfg_graphs: Vec<CfgGraph> =
-            function_blocks.iter().map(|x| CfgGraph::from(&x)).collect();
-        for graph in &cfg_graphs {
-            if filepath.len() > 0 {
-                graph.to_file(&filepath[0]);
-            } else {
-                println!("{:#?}", graph);
-            }
-        }
-    }
-
-    if args.local {
-        let function_blocks = program.basic_blocks();
-        let cfg_graphs: Vec<CfgGraph> = function_blocks
-            .iter()
-            .map(|x| CfgGraph::from(&x))
-            .map(|x| x.prune_unreachable())
-            .map(|x: CfgGraph| optimizations::lvn::lvn(x))
-            .map(|x| optimizations::dce::dce(x))
-            .collect();
-
-        program = Program::from(cfg_graphs);
-    }
-
-    if let Some(analyses) = args.dataflow {
-        let function_blocks = program.basic_blocks();
-        let cfg_graphs: Vec<CfgGraph> =
-            function_blocks.iter().map(|x| CfgGraph::from(&x)).collect();
-
-        if analyses.contains(&DataflowAnalysis::InitializedVariables) {
-            cfg_graphs.iter().for_each(|x| {
-                let result = run_dataflow_analysis(x.clone(), InitializedVariables {});
-                println!("Function: {}", x.function.name);
-                for i in result {
-                    println!("\t{}:", i.label_name);
-                    println!("\t\tin: {:?}", i.input);
-                    println!("\t\tout: {:?}", i.output);
-                }
-            });
-        }
-
-        if analyses.contains(&DataflowAnalysis::LiveVariables) {
-            cfg_graphs.iter().for_each(|x| {
-                let result = run_dataflow_analysis(x.clone(), LiveVariables {});
-                println!("Function: {}", x.function.name);
-                for i in result {
-                    println!("\t{}:", i.label_name);
-                    println!("\t\tin: {:?}", i.input);
-                    println!("\t\tout: {:?}", i.output);
-                }
-            });
-        }
-
-        return;
-    }
-
-    if args.dominator {
-        let function_blocks = program.basic_blocks();
-        function_blocks
-            .iter()
-            .map(|x| CfgGraph::from(&x).prune_unreachable())
-            .for_each(|x| println!("{:?}", dominance::DominanceUtility::from(&x)));
-
-        return;
-    }
-
     if let Some(filepath) = args.output {
-        program.to_file(&filepath);
+        log::info!("writing program to file '{}'", filepath);
+        match final_program.to_file(Path::new(&filepath)) {
+            Ok(_) => (),
+            Err(e) => {
+                log::error!("Failed to write program to file '{}': {}", filepath, e);
+                std::process::exit(1);
+            }
+        };
     } else {
-        println!("{}", program.to_string());
+        println!("{}", final_program.to_string());
     }
 }

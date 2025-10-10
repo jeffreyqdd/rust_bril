@@ -1,0 +1,1202 @@
+{
+    "quadratic.bril": {
+        "original_lines": 74,
+        "original_dyn_inst": 785,
+        "compiled_lines": 91,
+        "compiled_dyn_inst": 839,
+        "dce_lines": 89,
+        "dce_dyn_inst": 837,
+        "lvn_dce_lines": 87,
+        "lvn_dce_dyn_inst": 835
+    },
+    "montgomery.bril": {
+        "original_lines": 21,
+        "original_dyn_inst": 17,
+        "compiled_lines": 32,
+        "compiled_dyn_inst": 26,
+        "dce_lines": 32,
+        "dce_dyn_inst": 26,
+        "lvn_dce_lines": 32,
+        "lvn_dce_dyn_inst": 26
+    },
+    "primes-between.bril": {
+        "original_lines": 55,
+        "original_dyn_inst": 574100,
+        "compiled_lines": 70,
+        "compiled_dyn_inst": 736442,
+        "dce_lines": 70,
+        "dce_dyn_inst": 736442,
+        "lvn_dce_lines": 70,
+        "lvn_dce_dyn_inst": 736442
+    },
+    "mod_pow.bril": {
+        "original_lines": 74,
+        "original_dyn_inst": 243,
+        "compiled_lines": 97,
+        "compiled_dyn_inst": 293,
+        "dce_lines": 97,
+        "dce_dyn_inst": 293,
+        "lvn_dce_lines": 97,
+        "lvn_dce_dyn_inst": 293
+    },
+    "orders.bril": {
+        "original_lines": 73,
+        "original_dyn_inst": 5352,
+        "compiled_lines": 106,
+        "compiled_dyn_inst": 7441,
+        "dce_lines": 106,
+        "dce_dyn_inst": 7441,
+        "lvn_dce_lines": 106,
+        "lvn_dce_dyn_inst": 7441
+    },
+    "sum-check.bril": {
+        "original_lines": 30,
+        "original_dyn_inst": 5018,
+        "compiled_lines": 44,
+        "compiled_dyn_inst": 7024,
+        "dce_lines": 44,
+        "dce_dyn_inst": 7024,
+        "lvn_dce_lines": 44,
+        "lvn_dce_dyn_inst": 7024
+    },
+    "palindrome.bril": {
+        "original_lines": 76,
+        "original_dyn_inst": 298,
+        "compiled_lines": 106,
+        "compiled_dyn_inst": 440,
+        "dce_lines": 105,
+        "dce_dyn_inst": 437,
+        "lvn_dce_lines": 106,
+        "lvn_dce_dyn_inst": 437
+    },
+    "rot13.bril": {
+        "original_lines": 15,
+        "original_dyn_inst": 8,
+        "compiled_lines": 24,
+        "compiled_dyn_inst": 12,
+        "dce_lines": 24,
+        "dce_dyn_inst": 12,
+        "lvn_dce_lines": 24,
+        "lvn_dce_dyn_inst": 12
+    },
+    "totient.bril": {
+        "original_lines": 48,
+        "original_dyn_inst": 253,
+        "compiled_lines": 73,
+        "compiled_dyn_inst": 391,
+        "dce_lines": 73,
+        "dce_dyn_inst": 391,
+        "lvn_dce_lines": 73,
+        "lvn_dce_dyn_inst": 391
+    },
+    "fib_recursive.bril": {
+        "original_lines": 37,
+        "original_dyn_inst": 2693,
+        "compiled_lines": 44,
+        "compiled_dyn_inst": 2872,
+        "dce_lines": 44,
+        "dce_dyn_inst": 2872,
+        "lvn_dce_lines": 44,
+        "lvn_dce_dyn_inst": 2872
+    },
+    "relative-primes.bril": {
+        "original_lines": 92,
+        "original_dyn_inst": 1923,
+        "compiled_lines": 111,
+        "compiled_dyn_inst": 2297,
+        "dce_lines": 110,
+        "dce_dyn_inst": 2296,
+        "lvn_dce_lines": 110,
+        "lvn_dce_dyn_inst": 2296
+    },
+    "hanoi.bril": {
+        "original_lines": 19,
+        "original_dyn_inst": 99,
+        "compiled_lines": 29,
+        "compiled_dyn_inst": 161,
+        "dce_lines": 29,
+        "dce_dyn_inst": 161,
+        "lvn_dce_lines": 29,
+        "lvn_dce_dyn_inst": 161
+    },
+    "is-decreasing.bril": {
+        "original_lines": 44,
+        "original_dyn_inst": 127,
+        "compiled_lines": 57,
+        "compiled_dyn_inst": 150,
+        "dce_lines": 57,
+        "dce_dyn_inst": 150,
+        "lvn_dce_lines": 57,
+        "lvn_dce_dyn_inst": 150
+    },
+    "graycode.bril": {
+        "original_lines": 48,
+        "original_dyn_inst": 1259,
+        "compiled_lines": 66,
+        "compiled_dyn_inst": 1570,
+        "dce_lines": 65,
+        "dce_dyn_inst": 1569,
+        "lvn_dce_lines": 65,
+        "lvn_dce_dyn_inst": 1569
+    },
+    "grad_desc.bril": {
+        "original_lines": 23,
+        "original_dyn_inst": 229,
+        "compiled_lines": 33,
+        "compiled_dyn_inst": 275,
+        "dce_lines": 33,
+        "dce_dyn_inst": 275,
+        "lvn_dce_lines": 33,
+        "lvn_dce_dyn_inst": 275
+    },
+    "check-primes.bril": {
+        "original_lines": 75,
+        "original_dyn_inst": 8468,
+        "compiled_lines": 86,
+        "compiled_dyn_inst": 8933,
+        "dce_lines": 86,
+        "dce_dyn_inst": 8933,
+        "lvn_dce_lines": 86,
+        "lvn_dce_dyn_inst": 8933
+    },
+    "sum-sq-diff.bril": {
+        "original_lines": 72,
+        "original_dyn_inst": 3038,
+        "compiled_lines": 90,
+        "compiled_dyn_inst": 3446,
+        "dce_lines": 88,
+        "dce_dyn_inst": 3444,
+        "lvn_dce_lines": 88,
+        "lvn_dce_dyn_inst": 3444
+    },
+    "fitsinside.bril": {
+        "original_lines": 14,
+        "original_dyn_inst": 10,
+        "compiled_lines": 27,
+        "compiled_dyn_inst": 19,
+        "dce_lines": 27,
+        "dce_dyn_inst": 19,
+        "lvn_dce_lines": 27,
+        "lvn_dce_dyn_inst": 19
+    },
+    "hamming.bril": {
+        "original_lines": 39,
+        "original_dyn_inst": 117,
+        "compiled_lines": 56,
+        "compiled_dyn_inst": 150,
+        "dce_lines": 56,
+        "dce_dyn_inst": 150,
+        "lvn_dce_lines": 56,
+        "lvn_dce_dyn_inst": 150
+    },
+    "fact.bril": {
+        "original_lines": 22,
+        "original_dyn_inst": 229,
+        "compiled_lines": 29,
+        "compiled_dyn_inst": 252,
+        "dce_lines": 28,
+        "dce_dyn_inst": 251,
+        "lvn_dce_lines": 28,
+        "lvn_dce_dyn_inst": 251
+    },
+    "loopfact.bril": {
+        "original_lines": 26,
+        "original_dyn_inst": 116,
+        "compiled_lines": 34,
+        "compiled_dyn_inst": 136,
+        "dce_lines": 33,
+        "dce_dyn_inst": 135,
+        "lvn_dce_lines": 33,
+        "lvn_dce_dyn_inst": 135
+    },
+    "recfact.bril": {
+        "original_lines": 30,
+        "original_dyn_inst": 104,
+        "compiled_lines": 36,
+        "compiled_dyn_inst": 114,
+        "dce_lines": 35,
+        "dce_dyn_inst": 113,
+        "lvn_dce_lines": 35,
+        "lvn_dce_dyn_inst": 113
+    },
+    "geometric-sum.bril": {
+        "original_lines": 18,
+        "original_dyn_inst": 35,
+        "compiled_lines": 28,
+        "compiled_dyn_inst": 51,
+        "dce_lines": 28,
+        "dce_dyn_inst": 51,
+        "lvn_dce_lines": 28,
+        "lvn_dce_dyn_inst": 51
+    },
+    "sum-to-ten.bril": {
+        "original_lines": 27,
+        "original_dyn_inst": 143,
+        "compiled_lines": 34,
+        "compiled_dyn_inst": 166,
+        "dce_lines": 33,
+        "dce_dyn_inst": 165,
+        "lvn_dce_lines": 33,
+        "lvn_dce_dyn_inst": 165
+    },
+    "legendre.bril": {
+        "original_lines": 51,
+        "original_dyn_inst": 153,
+        "compiled_lines": 64,
+        "compiled_dyn_inst": 180,
+        "dce_lines": 64,
+        "dce_dyn_inst": 180,
+        "lvn_dce_lines": 64,
+        "lvn_dce_dyn_inst": 180
+    },
+    "factors.bril": {
+        "original_lines": 22,
+        "original_dyn_inst": 72,
+        "compiled_lines": 32,
+        "compiled_dyn_inst": 90,
+        "dce_lines": 32,
+        "dce_dyn_inst": 90,
+        "lvn_dce_lines": 32,
+        "lvn_dce_dyn_inst": 90
+    },
+    "perfect.bril": {
+        "original_lines": 32,
+        "original_dyn_inst": 232,
+        "compiled_lines": 44,
+        "compiled_dyn_inst": 305,
+        "dce_lines": 44,
+        "dce_dyn_inst": 305,
+        "lvn_dce_lines": 44,
+        "lvn_dce_dyn_inst": 305
+    },
+    "binpow.bril": {
+        "original_lines": 34,
+        "original_dyn_inst": 105,
+        "compiled_lines": 47,
+        "compiled_dyn_inst": 135,
+        "dce_lines": 47,
+        "dce_dyn_inst": 135,
+        "lvn_dce_lines": 47,
+        "lvn_dce_dyn_inst": 135
+    },
+    "bitshift.bril": {
+        "original_lines": 78,
+        "original_dyn_inst": 167,
+        "compiled_lines": 103,
+        "compiled_dyn_inst": 200,
+        "dce_lines": 103,
+        "dce_dyn_inst": 200,
+        "lvn_dce_lines": 103,
+        "lvn_dce_dyn_inst": 200
+    },
+    "digital-root.bril": {
+        "original_lines": 38,
+        "original_dyn_inst": 247,
+        "compiled_lines": 54,
+        "compiled_dyn_inst": 308,
+        "dce_lines": 54,
+        "dce_dyn_inst": 308,
+        "lvn_dce_lines": 54,
+        "lvn_dce_dyn_inst": 308
+    },
+    "tail-call.bril": {
+        "original_lines": 11,
+        "original_dyn_inst": 10504,
+        "compiled_lines": 14,
+        "compiled_dyn_inst": 12005,
+        "dce_lines": 14,
+        "dce_dyn_inst": 12005,
+        "lvn_dce_lines": 14,
+        "lvn_dce_dyn_inst": 12005
+    },
+    "up-arrow.bril": {
+        "original_lines": 26,
+        "original_dyn_inst": 252,
+        "compiled_lines": 43,
+        "compiled_dyn_inst": 369,
+        "dce_lines": 43,
+        "dce_dyn_inst": 369,
+        "lvn_dce_lines": 43,
+        "lvn_dce_dyn_inst": 369
+    },
+    "mccarthy91.bril": {
+        "original_lines": 19,
+        "original_dyn_inst": 1385,
+        "compiled_lines": 26,
+        "compiled_dyn_inst": 1560,
+        "dce_lines": 26,
+        "dce_dyn_inst": 1560,
+        "lvn_dce_lines": 26,
+        "lvn_dce_dyn_inst": 1560
+    },
+    "sum-divisors.bril": {
+        "original_lines": 38,
+        "original_dyn_inst": 159,
+        "compiled_lines": 61,
+        "compiled_dyn_inst": 241,
+        "dce_lines": 61,
+        "dce_dyn_inst": 241,
+        "lvn_dce_lines": 61,
+        "lvn_dce_dyn_inst": 241
+    },
+    "permutation.bril": {
+        "original_lines": 51,
+        "original_dyn_inst": 130,
+        "compiled_lines": 67,
+        "compiled_dyn_inst": 155,
+        "dce_lines": 66,
+        "dce_dyn_inst": 154,
+        "lvn_dce_lines": 66,
+        "lvn_dce_dyn_inst": 154
+    },
+    "combination.bril": {
+        "original_lines": 42,
+        "original_dyn_inst": 178,
+        "compiled_lines": 54,
+        "compiled_dyn_inst": 207,
+        "dce_lines": 54,
+        "dce_dyn_inst": 207,
+        "lvn_dce_lines": 54,
+        "lvn_dce_dyn_inst": 207
+    },
+    "bin-search.bril": {
+        "original_lines": 62,
+        "original_dyn_inst": 358,
+        "compiled_lines": 84,
+        "compiled_dyn_inst": 458,
+        "dce_lines": 83,
+        "dce_dyn_inst": 457,
+        "lvn_dce_lines": 83,
+        "lvn_dce_dyn_inst": 457
+    },
+    "ackermann.bril": {
+        "original_lines": 26,
+        "original_dyn_inst": 1464231,
+        "compiled_lines": 35,
+        "compiled_dyn_inst": 1808700,
+        "dce_lines": 35,
+        "dce_dyn_inst": 1808700,
+        "lvn_dce_lines": 35,
+        "lvn_dce_dyn_inst": 1808700
+    },
+    "pythagorean_triple.bril": {
+        "original_lines": 24,
+        "original_dyn_inst": 61518,
+        "compiled_lines": 32,
+        "compiled_dyn_inst": 69396,
+        "dce_lines": 32,
+        "dce_dyn_inst": 69396,
+        "lvn_dce_lines": 32,
+        "lvn_dce_dyn_inst": 69396
+    },
+    "gebmm.bril": {
+        "original_lines": 106,
+        "original_dyn_inst": 3011,
+        "compiled_lines": 165,
+        "compiled_dyn_inst": 4359,
+        "dce_lines": 165,
+        "dce_dyn_inst": 4359,
+        "lvn_dce_lines": 165,
+        "lvn_dce_dyn_inst": 4359
+    },
+    "euclid.bril": {
+        "original_lines": 57,
+        "original_dyn_inst": 563,
+        "compiled_lines": 74,
+        "compiled_dyn_inst": 669,
+        "dce_lines": 73,
+        "dce_dyn_inst": 668,
+        "lvn_dce_lines": 73,
+        "lvn_dce_dyn_inst": 668
+    },
+    "bbs.bril": {
+        "original_lines": 32,
+        "original_dyn_inst": 137,
+        "compiled_lines": 53,
+        "compiled_dyn_inst": 192,
+        "dce_lines": 53,
+        "dce_dyn_inst": 192,
+        "lvn_dce_lines": 53,
+        "lvn_dce_dyn_inst": 192
+    },
+    "sum-of-cubes.bril": {
+        "original_lines": 10,
+        "original_dyn_inst": 8,
+        "compiled_lines": 14,
+        "compiled_dyn_inst": 10,
+        "dce_lines": 14,
+        "dce_dyn_inst": 10,
+        "lvn_dce_lines": 14,
+        "lvn_dce_dyn_inst": 10
+    },
+    "binary-fmt.bril": {
+        "original_lines": 21,
+        "original_dyn_inst": 100,
+        "compiled_lines": 33,
+        "compiled_dyn_inst": 136,
+        "dce_lines": 33,
+        "dce_dyn_inst": 136,
+        "lvn_dce_lines": 33,
+        "lvn_dce_dyn_inst": 136
+    },
+    "dayofweek.bril": {
+        "original_lines": 287,
+        "original_dyn_inst": 269,
+        "compiled_lines": 337,
+        "compiled_dyn_inst": 312,
+        "dce_lines": 332,
+        "dce_dyn_inst": 307,
+        "lvn_dce_lines": 334,
+        "lvn_dce_dyn_inst": 307
+    },
+    "lcm.bril": {
+        "original_lines": 32,
+        "original_dyn_inst": 2326,
+        "compiled_lines": 45,
+        "compiled_dyn_inst": 2975,
+        "dce_lines": 45,
+        "dce_dyn_inst": 2975,
+        "lvn_dce_lines": 45,
+        "lvn_dce_dyn_inst": 2975
+    },
+    "gcd.bril": {
+        "original_lines": 27,
+        "original_dyn_inst": 46,
+        "compiled_lines": 40,
+        "compiled_dyn_inst": 64,
+        "dce_lines": 40,
+        "dce_dyn_inst": 64,
+        "lvn_dce_lines": 40,
+        "lvn_dce_dyn_inst": 64
+    },
+    "triangle.bril": {
+        "original_lines": 18,
+        "original_dyn_inst": 188,
+        "compiled_lines": 29,
+        "compiled_dyn_inst": 265,
+        "dce_lines": 29,
+        "dce_dyn_inst": 265,
+        "lvn_dce_lines": 29,
+        "lvn_dce_dyn_inst": 265
+    },
+    "catalan.bril": {
+        "original_lines": 29,
+        "original_dyn_inst": 659378,
+        "compiled_lines": 40,
+        "compiled_dyn_inst": 816843,
+        "dce_lines": 40,
+        "dce_dyn_inst": 816843,
+        "lvn_dce_lines": 40,
+        "lvn_dce_dyn_inst": 816843
+    },
+    "gpf.bril": {
+        "original_lines": 73,
+        "original_dyn_inst": 759,
+        "compiled_lines": 101,
+        "compiled_dyn_inst": 991,
+        "dce_lines": 100,
+        "dce_dyn_inst": 945,
+        "lvn_dce_lines": 100,
+        "lvn_dce_dyn_inst": 945
+    },
+    "armstrong.bril": {
+        "original_lines": 54,
+        "original_dyn_inst": 133,
+        "compiled_lines": 77,
+        "compiled_dyn_inst": 182,
+        "dce_lines": 77,
+        "dce_dyn_inst": 182,
+        "lvn_dce_lines": 77,
+        "lvn_dce_dyn_inst": 182
+    },
+    "pascals-row.bril": {
+        "original_lines": 45,
+        "original_dyn_inst": 146,
+        "compiled_lines": 56,
+        "compiled_dyn_inst": 161,
+        "dce_lines": 54,
+        "dce_dyn_inst": 155,
+        "lvn_dce_lines": 54,
+        "lvn_dce_dyn_inst": 155
+    },
+    "collatz.bril": {
+        "original_lines": 25,
+        "original_dyn_inst": 169,
+        "compiled_lines": 31,
+        "compiled_dyn_inst": 187,
+        "dce_lines": 31,
+        "dce_dyn_inst": 187,
+        "lvn_dce_lines": 31,
+        "lvn_dce_dyn_inst": 187
+    },
+    "sum-bits.bril": {
+        "original_lines": 23,
+        "original_dyn_inst": 73,
+        "compiled_lines": 34,
+        "compiled_dyn_inst": 100,
+        "dce_lines": 34,
+        "dce_dyn_inst": 100,
+        "lvn_dce_lines": 34,
+        "lvn_dce_dyn_inst": 100
+    },
+    "sqrt_bin_search.bril": {
+        "original_lines": 46,
+        "original_dyn_inst": 744,
+        "compiled_lines": 52,
+        "compiled_dyn_inst": 847,
+        "dce_lines": 49,
+        "dce_dyn_inst": 821,
+        "lvn_dce_lines": 49,
+        "lvn_dce_dyn_inst": 821
+    },
+    "mountain.bril": {
+        "original_lines": 42,
+        "original_dyn_inst": 100,
+        "compiled_lines": 60,
+        "compiled_dyn_inst": 131,
+        "dce_lines": 60,
+        "dce_dyn_inst": 131,
+        "lvn_dce_lines": 60,
+        "lvn_dce_dyn_inst": 131
+    },
+    "rectangles-area-difference.bril": {
+        "original_lines": 17,
+        "original_dyn_inst": 14,
+        "compiled_lines": 30,
+        "compiled_dyn_inst": 25,
+        "dce_lines": 30,
+        "dce_dyn_inst": 25,
+        "lvn_dce_lines": 30,
+        "lvn_dce_dyn_inst": 25
+    },
+    "mod_inv.bril": {
+        "original_lines": 63,
+        "original_dyn_inst": 558,
+        "compiled_lines": 80,
+        "compiled_dyn_inst": 662,
+        "dce_lines": 79,
+        "dce_dyn_inst": 661,
+        "lvn_dce_lines": 77,
+        "lvn_dce_dyn_inst": 661
+    },
+    "karatsuba.bril": {
+        "original_lines": 98,
+        "original_dyn_inst": 1548,
+        "compiled_lines": 132,
+        "compiled_dyn_inst": 1984,
+        "dce_lines": 132,
+        "dce_dyn_inst": 1984,
+        "lvn_dce_lines": 132,
+        "lvn_dce_dyn_inst": 1984
+    },
+    "reverse.bril": {
+        "original_lines": 28,
+        "original_dyn_inst": 46,
+        "compiled_lines": 41,
+        "compiled_dyn_inst": 60,
+        "dce_lines": 41,
+        "dce_dyn_inst": 60,
+        "lvn_dce_lines": 41,
+        "lvn_dce_dyn_inst": 60
+    },
+    "sum-divisible-by-m.bril": {
+        "original_lines": 18,
+        "original_dyn_inst": 16,
+        "compiled_lines": 23,
+        "compiled_dyn_inst": 19,
+        "dce_lines": 23,
+        "dce_dyn_inst": 19,
+        "lvn_dce_lines": 23,
+        "lvn_dce_dyn_inst": 19
+    },
+    "fizz-buzz.bril": {
+        "original_lines": 71,
+        "original_dyn_inst": 3652,
+        "compiled_lines": 77,
+        "compiled_dyn_inst": 3755,
+        "dce_lines": 77,
+        "dce_dyn_inst": 3755,
+        "lvn_dce_lines": 77,
+        "lvn_dce_dyn_inst": 3755
+    },
+    "bitwise-ops.bril": {
+        "original_lines": 77,
+        "original_dyn_inst": 1690,
+        "compiled_lines": 120,
+        "compiled_dyn_inst": 2284,
+        "dce_lines": 118,
+        "dce_dyn_inst": 2282,
+        "lvn_dce_lines": 118,
+        "lvn_dce_dyn_inst": 2282
+    },
+    "sum-digits.bril": {
+        "original_lines": 31,
+        "original_dyn_inst": 219,
+        "compiled_lines": 39,
+        "compiled_dyn_inst": 243,
+        "dce_lines": 38,
+        "dce_dyn_inst": 242,
+        "lvn_dce_lines": 38,
+        "lvn_dce_dyn_inst": 242
+    },
+    "delannoy.bril": {
+        "original_lines": 46,
+        "original_dyn_inst": 5748752,
+        "compiled_lines": 54,
+        "compiled_dyn_inst": 6545940,
+        "dce_lines": 53,
+        "dce_dyn_inst": 6545939,
+        "lvn_dce_lines": 49,
+        "lvn_dce_dyn_inst": 6014483
+    },
+    "cholesky.bril": {
+        "original_lines": 302,
+        "original_dyn_inst": 3761,
+        "compiled_lines": 362,
+        "compiled_dyn_inst": 4249,
+        "dce_lines": 361,
+        "dce_dyn_inst": 4248,
+        "lvn_dce_lines": 361,
+        "lvn_dce_dyn_inst": 4248
+    },
+    "montecarlo.bril": {
+        "original_lines": 186,
+        "original_dyn_inst": 110333392,
+        "compiled_lines": 250,
+        "compiled_dyn_inst": 138147727,
+        "dce_lines": 250,
+        "dce_dyn_inst": 138147727,
+        "lvn_dce_lines": 250,
+        "lvn_dce_dyn_inst": 138147727
+    },
+    "mat-inv.bril": {
+        "original_lines": 136,
+        "original_dyn_inst": 1044,
+        "compiled_lines": 168,
+        "compiled_dyn_inst": 1386,
+        "dce_lines": 168,
+        "dce_dyn_inst": 1386,
+        "lvn_dce_lines": 168,
+        "lvn_dce_dyn_inst": 1386
+    },
+    "random_walk.bril": {
+        "original_lines": 98,
+        "original_dyn_inst": 516754,
+        "compiled_lines": 123,
+        "compiled_dyn_inst": 636673,
+        "dce_lines": 123,
+        "dce_dyn_inst": 636673,
+        "lvn_dce_lines": 123,
+        "lvn_dce_dyn_inst": 636673
+    },
+    "gol.bril": {
+        "original_lines": 230,
+        "original_dyn_inst": 1425,
+        "compiled_lines": 300,
+        "compiled_dyn_inst": 1830,
+        "dce_lines": 291,
+        "dce_dyn_inst": 1781,
+        "lvn_dce_lines": 291,
+        "lvn_dce_dyn_inst": 1781
+    },
+    "fast-inverse-sqrt.bril": {
+        "original_lines": 74,
+        "original_dyn_inst": 28,
+        "compiled_lines": 92,
+        "compiled_dyn_inst": 34,
+        "dce_lines": 92,
+        "dce_dyn_inst": 34,
+        "lvn_dce_lines": 92,
+        "lvn_dce_dyn_inst": 34
+    },
+    "function_call.bril": {
+        "original_lines": 23,
+        "original_dyn_inst": 59809726,
+        "compiled_lines": 27,
+        "compiled_dyn_inst": 71011546,
+        "dce_lines": 26,
+        "dce_dyn_inst": 65410636,
+        "lvn_dce_lines": 26,
+        "lvn_dce_dyn_inst": 65410636
+    },
+    "ray-sphere-intersection.bril": {
+        "original_lines": 112,
+        "original_dyn_inst": 142,
+        "compiled_lines": 135,
+        "compiled_dyn_inst": 171,
+        "dce_lines": 135,
+        "dce_dyn_inst": 171,
+        "lvn_dce_lines": 129,
+        "lvn_dce_dyn_inst": 165
+    },
+    "birthday.bril": {
+        "original_lines": 46,
+        "original_dyn_inst": 484,
+        "compiled_lines": 57,
+        "compiled_dyn_inst": 533,
+        "dce_lines": 56,
+        "dce_dyn_inst": 532,
+        "lvn_dce_lines": 56,
+        "lvn_dce_dyn_inst": 532
+    },
+    "conjugate-gradient.bril": {
+        "original_lines": 233,
+        "original_dyn_inst": 1999,
+        "compiled_lines": 329,
+        "compiled_dyn_inst": 2461,
+        "dce_lines": 329,
+        "dce_dyn_inst": 2461,
+        "lvn_dce_lines": 329,
+        "lvn_dce_dyn_inst": 2461
+    },
+    "leibniz.bril": {
+        "original_lines": 31,
+        "original_dyn_inst": 12499997,
+        "compiled_lines": 44,
+        "compiled_dyn_inst": 17499997,
+        "dce_lines": 44,
+        "dce_dyn_inst": 17499997,
+        "lvn_dce_lines": 44,
+        "lvn_dce_dyn_inst": 17499997
+    },
+    "n_root.bril": {
+        "original_lines": 42,
+        "original_dyn_inst": 733,
+        "compiled_lines": 61,
+        "compiled_dyn_inst": 1018,
+        "dce_lines": 61,
+        "dce_dyn_inst": 1018,
+        "lvn_dce_lines": 61,
+        "lvn_dce_dyn_inst": 1018
+    },
+    "newton.bril": {
+        "original_lines": 36,
+        "original_dyn_inst": 217,
+        "compiled_lines": 51,
+        "compiled_dyn_inst": 294,
+        "dce_lines": 51,
+        "dce_dyn_inst": 294,
+        "lvn_dce_lines": 51,
+        "lvn_dce_dyn_inst": 294
+    },
+    "euler.bril": {
+        "original_lines": 54,
+        "original_dyn_inst": 1908,
+        "compiled_lines": 67,
+        "compiled_dyn_inst": 2103,
+        "dce_lines": 66,
+        "dce_dyn_inst": 2102,
+        "lvn_dce_lines": 66,
+        "lvn_dce_dyn_inst": 2102
+    },
+    "riemann.bril": {
+        "original_lines": 83,
+        "original_dyn_inst": 298,
+        "compiled_lines": 116,
+        "compiled_dyn_inst": 386,
+        "dce_lines": 116,
+        "dce_dyn_inst": 386,
+        "lvn_dce_lines": 116,
+        "lvn_dce_dyn_inst": 386
+    },
+    "mandelbrot.bril": {
+        "original_lines": 165,
+        "original_dyn_inst": 2720947,
+        "compiled_lines": 192,
+        "compiled_dyn_inst": 3027387,
+        "dce_lines": 192,
+        "dce_dyn_inst": 3027387,
+        "lvn_dce_lines": 190,
+        "lvn_dce_dyn_inst": 3027387
+    },
+    "logistic.bril": {
+        "original_lines": 18,
+        "original_dyn_inst": 1110,
+        "compiled_lines": 29,
+        "compiled_dyn_inst": 1417,
+        "dce_lines": 29,
+        "dce_dyn_inst": 1417,
+        "lvn_dce_lines": 29,
+        "lvn_dce_dyn_inst": 1417
+    },
+    "rgb2gray.bril": {
+        "original_lines": 18,
+        "original_dyn_inst": 14,
+        "compiled_lines": 26,
+        "compiled_dyn_inst": 18,
+        "dce_lines": 26,
+        "dce_dyn_inst": 18,
+        "lvn_dce_lines": 26,
+        "lvn_dce_dyn_inst": 18
+    },
+    "norm.bril": {
+        "original_lines": 104,
+        "original_dyn_inst": 505,
+        "compiled_lines": 145,
+        "compiled_dyn_inst": 690,
+        "dce_lines": 145,
+        "dce_dyn_inst": 690,
+        "lvn_dce_lines": 145,
+        "lvn_dce_dyn_inst": 690
+    },
+    "harmonic-sum.bril": {
+        "original_lines": 29,
+        "original_dyn_inst": 10950013,
+        "compiled_lines": 37,
+        "compiled_dyn_inst": 12410017,
+        "dce_lines": 36,
+        "dce_dyn_inst": 12410016,
+        "lvn_dce_lines": 36,
+        "lvn_dce_dyn_inst": 12410016
+    },
+    "cordic.bril": {
+        "original_lines": 153,
+        "original_dyn_inst": 1062,
+        "compiled_lines": 171,
+        "compiled_dyn_inst": 1189,
+        "dce_lines": 167,
+        "dce_dyn_inst": 1128,
+        "lvn_dce_lines": 169,
+        "lvn_dce_dyn_inst": 1148
+    },
+    "exponentiation-by-squaring.bril": {
+        "original_lines": 48,
+        "original_dyn_inst": 187,
+        "compiled_lines": 69,
+        "compiled_dyn_inst": 283,
+        "dce_lines": 69,
+        "dce_dyn_inst": 283,
+        "lvn_dce_lines": 69,
+        "lvn_dce_dyn_inst": 283
+    },
+    "pow.bril": {
+        "original_lines": 37,
+        "original_dyn_inst": 36,
+        "compiled_lines": 49,
+        "compiled_dyn_inst": 44,
+        "dce_lines": 47,
+        "dce_dyn_inst": 42,
+        "lvn_dce_lines": 47,
+        "lvn_dce_dyn_inst": 42
+    },
+    "ray-bbox-intersection.bril": {
+        "original_lines": 93,
+        "original_dyn_inst": 33,
+        "compiled_lines": 141,
+        "compiled_dyn_inst": 61,
+        "dce_lines": 141,
+        "dce_dyn_inst": 61,
+        "lvn_dce_lines": 141,
+        "lvn_dce_dyn_inst": 61
+    },
+    "sqrt.bril": {
+        "original_lines": 59,
+        "original_dyn_inst": 322,
+        "compiled_lines": 70,
+        "compiled_dyn_inst": 361,
+        "dce_lines": 69,
+        "dce_dyn_inst": 360,
+        "lvn_dce_lines": 69,
+        "lvn_dce_dyn_inst": 360
+    },
+    "quickselect.bril": {
+        "original_lines": 111,
+        "original_dyn_inst": 279,
+        "compiled_lines": 146,
+        "compiled_dyn_inst": 370,
+        "dce_lines": 146,
+        "dce_dyn_inst": 370,
+        "lvn_dce_lines": 146,
+        "lvn_dce_dyn_inst": 370
+    },
+    "1dconv.bril": {
+        "original_lines": 96,
+        "original_dyn_inst": 391,
+        "compiled_lines": 130,
+        "compiled_dyn_inst": 487,
+        "dce_lines": 130,
+        "dce_dyn_inst": 487,
+        "lvn_dce_lines": 130,
+        "lvn_dce_dyn_inst": 487
+    },
+    "kadane.bril": {
+        "original_lines": 79,
+        "original_dyn_inst": 157,
+        "compiled_lines": 106,
+        "compiled_dyn_inst": 223,
+        "dce_lines": 106,
+        "dce_dyn_inst": 223,
+        "lvn_dce_lines": 106,
+        "lvn_dce_dyn_inst": 223
+    },
+    "lis.bril": {
+        "original_lines": 94,
+        "original_dyn_inst": 583,
+        "compiled_lines": 122,
+        "compiled_dyn_inst": 697,
+        "dce_lines": 122,
+        "dce_dyn_inst": 697,
+        "lvn_dce_lines": 122,
+        "lvn_dce_dyn_inst": 697
+    },
+    "sieve.bril": {
+        "original_lines": 93,
+        "original_dyn_inst": 3482,
+        "compiled_lines": 129,
+        "compiled_dyn_inst": 4157,
+        "dce_lines": 129,
+        "dce_dyn_inst": 4157,
+        "lvn_dce_lines": 129,
+        "lvn_dce_dyn_inst": 4157
+    },
+    "bubblesort.bril": {
+        "original_lines": 80,
+        "original_dyn_inst": 253,
+        "compiled_lines": 113,
+        "compiled_dyn_inst": 318,
+        "dce_lines": 113,
+        "dce_dyn_inst": 318,
+        "lvn_dce_lines": 113,
+        "lvn_dce_dyn_inst": 318
+    },
+    "filter.bril": {
+        "original_lines": 59,
+        "original_dyn_inst": 94,
+        "compiled_lines": 64,
+        "compiled_dyn_inst": 101,
+        "dce_lines": 64,
+        "dce_dyn_inst": 101,
+        "lvn_dce_lines": 64,
+        "lvn_dce_dyn_inst": 101
+    },
+    "primitive-root.bril": {
+        "original_lines": 165,
+        "original_dyn_inst": 11029,
+        "compiled_lines": 233,
+        "compiled_dyn_inst": 15094,
+        "dce_lines": 231,
+        "dce_dyn_inst": 15092,
+        "lvn_dce_lines": 231,
+        "lvn_dce_dyn_inst": 15092
+    },
+    "adler32.bril": {
+        "original_lines": 76,
+        "original_dyn_inst": 6851,
+        "compiled_lines": 118,
+        "compiled_dyn_inst": 10244,
+        "dce_lines": 118,
+        "dce_dyn_inst": 10244,
+        "lvn_dce_lines": 118,
+        "lvn_dce_dyn_inst": 10244
+    },
+    "systolic.bril": {
+        "original_lines": 214,
+        "original_dyn_inst": 527,
+        "compiled_lines": 288,
+        "compiled_dyn_inst": 718,
+        "dce_lines": 286,
+        "dce_dyn_inst": 698,
+        "lvn_dce_lines": 286,
+        "lvn_dce_dyn_inst": 698
+    },
+    "fnv1-hash.bril": {
+        "original_lines": 96,
+        "original_dyn_inst": 1768440,
+        "compiled_lines": 154,
+        "compiled_dyn_inst": 2416617,
+        "dce_lines": 154,
+        "dce_dyn_inst": 2416617,
+        "lvn_dce_lines": 154,
+        "lvn_dce_dyn_inst": 2416617
+    },
+    "adj2csr.bril": {
+        "original_lines": 127,
+        "original_dyn_inst": 56629,
+        "compiled_lines": 170,
+        "compiled_dyn_inst": 67822,
+        "dce_lines": 170,
+        "dce_dyn_inst": 67822,
+        "lvn_dce_lines": 170,
+        "lvn_dce_dyn_inst": 67822
+    },
+    "char-poly.bril": {
+        "original_lines": 164,
+        "original_dyn_inst": 383,
+        "compiled_lines": 224,
+        "compiled_dyn_inst": 526,
+        "dce_lines": 224,
+        "dce_dyn_inst": 526,
+        "lvn_dce_lines": 224,
+        "lvn_dce_dyn_inst": 526
+    },
+    "csrmv.bril": {
+        "original_lines": 212,
+        "original_dyn_inst": 121202,
+        "compiled_lines": 281,
+        "compiled_dyn_inst": 164053,
+        "dce_lines": 280,
+        "dce_dyn_inst": 163503,
+        "lvn_dce_lines": 280,
+        "lvn_dce_dyn_inst": 163503
+    },
+    "dot-product.bril": {
+        "original_lines": 58,
+        "original_dyn_inst": 88,
+        "compiled_lines": 70,
+        "compiled_dyn_inst": 104,
+        "dce_lines": 70,
+        "dce_dyn_inst": 104,
+        "lvn_dce_lines": 70,
+        "lvn_dce_dyn_inst": 104
+    },
+    "shufflesort.bril": {
+        "original_lines": 175,
+        "original_dyn_inst": 36564,
+        "compiled_lines": 250,
+        "compiled_dyn_inst": 50647,
+        "dce_lines": 250,
+        "dce_dyn_inst": 50647,
+        "lvn_dce_lines": 250,
+        "lvn_dce_dyn_inst": 50647
+    },
+    "major-elm.bril": {
+        "original_lines": 55,
+        "original_dyn_inst": 47,
+        "compiled_lines": 76,
+        "compiled_dyn_inst": 61,
+        "dce_lines": 76,
+        "dce_dyn_inst": 61,
+        "lvn_dce_lines": 76,
+        "lvn_dce_dyn_inst": 61
+    },
+    "max-subarray.bril": {
+        "original_lines": 65,
+        "original_dyn_inst": 193,
+        "compiled_lines": 102,
+        "compiled_dyn_inst": 289,
+        "dce_lines": 102,
+        "dce_dyn_inst": 289,
+        "lvn_dce_lines": 102,
+        "lvn_dce_dyn_inst": 289
+    },
+    "mat-mul.bril": {
+        "original_lines": 114,
+        "original_dyn_inst": 1990407,
+        "compiled_lines": 148,
+        "compiled_dyn_inst": 2278032,
+        "dce_lines": 148,
+        "dce_dyn_inst": 2278032,
+        "lvn_dce_lines": 148,
+        "lvn_dce_dyn_inst": 2278032
+    },
+    "fib.bril": {
+        "original_lines": 33,
+        "original_dyn_inst": 121,
+        "compiled_lines": 42,
+        "compiled_dyn_inst": 149,
+        "dce_lines": 42,
+        "dce_dyn_inst": 149,
+        "lvn_dce_lines": 42,
+        "lvn_dce_dyn_inst": 149
+    },
+    "vsmul.bril": {
+        "original_lines": 52,
+        "original_dyn_inst": 86036,
+        "compiled_lines": 67,
+        "compiled_dyn_inst": 98330,
+        "dce_lines": 67,
+        "dce_dyn_inst": 98330,
+        "lvn_dce_lines": 67,
+        "lvn_dce_dyn_inst": 98330
+    },
+    "quicksort-hoare.bril": {
+        "original_lines": 151,
+        "original_dyn_inst": 27333,
+        "compiled_lines": 209,
+        "compiled_dyn_inst": 38149,
+        "dce_lines": 209,
+        "dce_dyn_inst": 38149,
+        "lvn_dce_lines": 209,
+        "lvn_dce_dyn_inst": 38149
+    },
+    "insertion-sort.bril": {
+        "original_lines": 73,
+        "original_dyn_inst": 170,
+        "compiled_lines": 100,
+        "compiled_dyn_inst": 204,
+        "dce_lines": 100,
+        "dce_dyn_inst": 204,
+        "lvn_dce_lines": 100,
+        "lvn_dce_dyn_inst": 204
+    },
+    "2dconvol.bril": {
+        "original_lines": 131,
+        "original_dyn_inst": 21709,
+        "compiled_lines": 175,
+        "compiled_dyn_inst": 24958,
+        "dce_lines": 175,
+        "dce_dyn_inst": 24958,
+        "lvn_dce_lines": 175,
+        "lvn_dce_dyn_inst": 24958
+    },
+    "quicksort.bril": {
+        "original_lines": 95,
+        "original_dyn_inst": 264,
+        "compiled_lines": 135,
+        "compiled_dyn_inst": 349,
+        "dce_lines": 135,
+        "dce_dyn_inst": 349,
+        "lvn_dce_lines": 135,
+        "lvn_dce_dyn_inst": 349
+    },
+    "two-sum.bril": {
+        "original_lines": 126,
+        "original_dyn_inst": 98,
+        "compiled_lines": 140,
+        "compiled_dyn_inst": 105,
+        "dce_lines": 130,
+        "dce_dyn_inst": 95,
+        "lvn_dce_lines": 131,
+        "lvn_dce_dyn_inst": 96
+    },
+    "eight-queens.bril": {
+        "original_lines": 69,
+        "original_dyn_inst": 1006454,
+        "compiled_lines": 91,
+        "compiled_dyn_inst": 1148262,
+        "dce_lines": 90,
+        "dce_dyn_inst": 1101510,
+        "lvn_dce_lines": 90,
+        "lvn_dce_dyn_inst": 1101510
+    },
+    "sorting-network-five.bril": {
+        "original_lines": 133,
+        "original_dyn_inst": 284,
+        "compiled_lines": 164,
+        "compiled_dyn_inst": 341,
+        "dce_lines": 153,
+        "dce_dyn_inst": 326,
+        "lvn_dce_lines": 153,
+        "lvn_dce_dyn_inst": 326
+    },
+    "connected-components.bril": {
+        "original_lines": 210,
+        "original_dyn_inst": 1978,
+        "compiled_lines": 292,
+        "compiled_dyn_inst": 3037,
+        "dce_lines": 292,
+        "dce_dyn_inst": 3037,
+        "lvn_dce_lines": 292,
+        "lvn_dce_dyn_inst": 3037
+    },
+    "binary-search.bril": {
+        "original_lines": 84,
+        "original_dyn_inst": 78,
+        "compiled_lines": 107,
+        "compiled_dyn_inst": 97,
+        "dce_lines": 106,
+        "dce_dyn_inst": 94,
+        "lvn_dce_lines": 106,
+        "lvn_dce_dyn_inst": 94
+    }
+}
