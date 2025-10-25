@@ -65,6 +65,10 @@ struct Args {
     /// Run local value numbering
     #[arg(long, action)]
     lvn: bool,
+
+    /// Run loop optimizations
+    #[arg(long, action)]
+    loops: bool,
 }
 
 impl From<LogLevel> for LevelFilter {
@@ -108,6 +112,19 @@ fn main() {
     let mut abstract_program = rust_bril::representation::RichAbstractProgram::from(rich_program);
 
     // run optimizations
+    if args.loops {
+        abstract_program.program.functions = abstract_program
+            .program
+            .functions
+            .into_iter()
+            .map(|(n, af)| {
+                match rust_bril::optimizations::loops::loop_invariant_code_motion_pass(af) {
+                    Ok(af_new) => (n, af_new),
+                    Err(e) => e.error_with_context_then_exit(&abstract_program.original_text),
+                }
+            })
+            .collect();
+    }
     if args.lvn {
         abstract_program.program.functions = abstract_program
             .program

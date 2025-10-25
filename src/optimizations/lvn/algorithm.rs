@@ -1,7 +1,7 @@
 use crate::{
     dataflow::{run_dataflow_analysis, WorklistProperty, WorklistResult},
     optimizations::lvn::numbering_table::LocalValueNumberingTable,
-    representation::AbstractFunction,
+    representation::{AbstractFunction, ControlFlowGraph},
 };
 
 struct Lvn {}
@@ -32,9 +32,11 @@ impl WorklistProperty for Lvn {
 
     fn transfer(
         mut domain: Self::Domain,
-        block: &mut crate::representation::BasicBlock,
-        args: Option<&Vec<crate::representation::Argument>>,
+        block_id: usize,
+        cfg: &mut ControlFlowGraph,
+        _: Option<&Vec<crate::representation::Argument>>,
     ) -> crate::dataflow::WorklistResult<Self::Domain> {
+        let block = &mut cfg.basic_blocks[block_id];
         for instr in block.instructions.iter_mut() {
             *instr = domain.canonicalize(instr.clone());
         }

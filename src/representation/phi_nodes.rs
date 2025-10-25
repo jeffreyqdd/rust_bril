@@ -5,8 +5,8 @@ use crate::{
         run_dataflow_analysis, LiveVariables, WorklistError, WorklistProperty, WorklistResult,
     },
     representation::{
-        AbstractFunction, Argument, BasicBlock, BlockId, Code, Label, Position, Terminator, Type,
-        ValueOp, Variable,
+        AbstractFunction, Argument, BasicBlock, BlockId, Code, ControlFlowGraph, Label, Position,
+        Terminator, Type, ValueOp, Variable,
     },
 };
 
@@ -64,10 +64,12 @@ impl WorklistProperty for PhiTypeWorklist {
 
     fn transfer(
         mut domain: Self::Domain,
-        block: &mut BasicBlock,
+        block_id: usize,
+        cfg: &mut ControlFlowGraph,
         _: Option<&Vec<Argument>>,
     ) -> WorklistResult<Self::Domain> {
         // process phi nodes
+        let block = &mut cfg.basic_blocks[block_id];
         for phi in &mut block.phi_nodes {
             let argument_types = phi
                 .phi_args

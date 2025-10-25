@@ -3,7 +3,7 @@ use std::{collections::HashSet, vec};
 
 use crate::{
     dataflow::{run_dataflow_analysis, WorklistProperty, WorklistResult},
-    representation::{AbstractFunction, BlockId, Code, Terminator},
+    representation::{AbstractFunction, BlockId, Code, ControlFlowGraph, Terminator},
 };
 
 // iterating until all variables are referenced
@@ -58,13 +58,15 @@ impl WorklistProperty for Dce {
 
     fn transfer(
         domain: Self::Domain,
-        block: &mut crate::representation::BasicBlock,
+        block_id: usize,
+        cfg: &mut ControlFlowGraph,
         _: Option<&Vec<crate::representation::Argument>>,
     ) -> WorklistResult<Self::Domain> {
         // iterate backwards through the instructions
         //      1. process definitions first (remove from live set)
         //      2. then process arguments (add to live set)
 
+        let block = &mut cfg.basic_blocks[block_id];
         let mut domain_view: HashSet<&str> = domain.iter().map(|s| s.as_str()).collect();
 
         match &block.terminator {

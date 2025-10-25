@@ -45,7 +45,7 @@ pub struct Argument {
     pub pos: Option<Position>,
 }
 
-#[derive(serde::Deserialize, serde::Serialize, Debug, Clone)]
+#[derive(serde::Deserialize, serde::Serialize, Debug, Clone, Hash, PartialEq, Eq)]
 #[serde(untagged)]
 pub enum Code {
     Label {
@@ -106,7 +106,7 @@ pub enum Code {
     },
 }
 
-#[derive(serde::Deserialize, serde::Serialize, Debug, Clone, Copy)]
+#[derive(serde::Deserialize, serde::Serialize, Debug, Clone, Copy, Hash, PartialEq, Eq)]
 #[serde(rename_all = "lowercase")]
 pub enum Noop {
     Nop,

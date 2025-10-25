@@ -4,7 +4,9 @@ use std::{
 };
 use thiserror::Error;
 
-use crate::representation::{AbstractFunction, Argument, BasicBlock, BlockId, Position};
+use crate::representation::{
+    AbstractFunction, Argument, BasicBlock, BlockId, ControlFlowGraph, Position,
+};
 
 /// Errors that can occur during worklist algorithm execution
 #[derive(Error, Debug, Clone)]
@@ -138,7 +140,8 @@ pub trait WorklistProperty {
     fn merge(predecessors: Vec<(&BlockId, &Self::Domain)>) -> WorklistResult<Self::Domain>;
     fn transfer(
         domain: Self::Domain,
-        block: &mut BasicBlock,
+        block_id: usize,
+        cfg: &mut ControlFlowGraph,
         args: Option<&Vec<Argument>>,
     ) -> WorklistResult<Self::Domain>;
 
@@ -230,7 +233,8 @@ impl<'a> WorklistAlgorithm<'a> {
             let in_ = T::merge(inputs)?;
             let out = T::transfer(
                 in_.clone(),
-                &mut self.abstract_function.cfg.basic_blocks[cur],
+                cur,
+                &mut self.abstract_function.cfg,
                 self.abstract_function.args.as_ref(),
             )?;
             let is_same = result.get(&cur).is_some_and(|(_, o)| *o == out);
