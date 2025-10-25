@@ -1,9 +1,6 @@
 use clap::{Parser, ValueEnum};
 use log::LevelFilter;
-use rust_bril::{
-    bril_logger,
-    optimizations::{dce, lvn},
-};
+use rust_bril::{bril_logger, optimizations::dce, optimizations::lvn};
 use std::path::Path;
 
 // use rust_bril::{

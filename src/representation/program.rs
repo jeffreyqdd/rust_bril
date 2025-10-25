@@ -288,6 +288,21 @@ impl Code {
             Code::Noop { pos, .. } => *pos,
         }
     }
+
+    pub fn has_side_effects(&self) -> bool {
+        match self {
+            Code::Effect { .. } => true,
+            Code::Memory { .. } => true,
+            Code::Value {
+                op: ValueOp::Call, ..
+            } => true,
+            _ => false,
+        }
+    }
+
+    pub fn is_label(&self) -> bool {
+        matches!(self, Code::Label { .. })
+    }
 }
 
 impl std::fmt::Display for Code {

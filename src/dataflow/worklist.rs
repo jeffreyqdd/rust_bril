@@ -160,7 +160,7 @@ impl<'a> WorklistAlgorithm<'a> {
     fn from(abstract_function: &'a mut AbstractFunction) -> Self {
         Self {
             abstract_function,
-            max_iterations: 10000,
+            max_iterations: 10_000,
         }
     }
 
