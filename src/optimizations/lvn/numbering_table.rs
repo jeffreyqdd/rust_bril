@@ -20,6 +20,7 @@ fn next_uid() -> usize {
 ///
 /// NOTE: EffectOperations should never be constructed since only their args need to be re-projected.
 /// They do not create any new variables that we should keep track of.
+#[allow(unused)]
 enum Operation {
     Value(ValueOp),
     Memory(MemoryOp),

@@ -2,7 +2,7 @@ use std::collections::HashSet;
 
 use crate::{
     dataflow::{WorklistProperty, WorklistResult},
-    representation::{AbstractFunction, Argument, BasicBlock, BlockId, Code, ControlFlowGraph},
+    representation::{AbstractFunction, Argument, BlockId, Code, ControlFlowGraph},
 };
 
 pub struct LiveVariables {}

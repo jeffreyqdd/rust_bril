@@ -5,8 +5,8 @@ use crate::{
         run_dataflow_analysis, LiveVariables, WorklistError, WorklistProperty, WorklistResult,
     },
     representation::{
-        AbstractFunction, Argument, BasicBlock, BlockId, Code, ControlFlowGraph, Label, Position,
-        Terminator, Type, ValueOp, Variable,
+        AbstractFunction, Argument, BlockId, Code, ControlFlowGraph, Label, Position, Terminator,
+        Type, ValueOp, Variable,
     },
 };
 
