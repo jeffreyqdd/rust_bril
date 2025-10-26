@@ -5,6 +5,7 @@ check:
 	turnt --env check_ssa $(ALL_BENCHMARKS) --parallel --verbose
 	turnt --env check_dce $(ALL_BENCHMARKS) --parallel --verbose
 	turnt --env check_lvn_dce $(ALL_BENCHMARKS) --parallel --verbose
+	turnt --env check_loop $(ALL_BENCHMARKS) --parallel --verbose
 .PHONY: bench-check 
 
 bench: 

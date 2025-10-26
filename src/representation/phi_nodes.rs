@@ -423,18 +423,37 @@ pub fn remove_phi_nodes(abstract_function: &mut AbstractFunction) {
         // for each phi node, push assignment into blocks with its labels
         for (var, label) in p.phi_args {
             // for each phi node, push assignment into blocks with its labels
-            let b_idx = label_to_index.get(&label).expect("should never be here");
-            abstract_function.cfg.basic_blocks[*b_idx]
-                .instructions
-                .push(Code::Value {
-                    op: ValueOp::Id,
-                    dest: p.dest.clone(),
-                    value_type: p.phi_type.clone(),
-                    args: Some(vec![var]),
-                    funcs: None,
-                    labels: None,
-                    pos: None,
-                });
+
+            // check if label has "pre_header_" prefix
+            let (stripped_label, is_preheader) = if label.starts_with("pre_header_") {
+                (label.trim_start_matches("pre_header_"), true)
+            } else {
+                (label.as_str(), false)
+            };
+
+            let b_idx = label_to_index
+                .get(stripped_label)
+                .expect("should never be here");
+
+            let code = Code::Value {
+                op: ValueOp::Id,
+                dest: p.dest.clone(),
+                value_type: p.phi_type.clone(),
+                args: Some(vec![var]),
+                funcs: None,
+                labels: None,
+                pos: None,
+            };
+
+            if is_preheader {
+                abstract_function.cfg.basic_blocks[*b_idx]
+                    .preheader
+                    .push(code);
+            } else {
+                abstract_function.cfg.basic_blocks[*b_idx]
+                    .instructions
+                    .push(code);
+            }
         }
     }
 }

@@ -289,6 +289,14 @@ impl Code {
         }
     }
 
+    pub fn get_labels(&self) -> Option<&Vec<String>> {
+        match self {
+            Code::Value { labels, .. } => labels.as_ref(),
+            Code::Effect { labels, .. } => labels.as_ref(),
+            _ => None,
+        }
+    }
+
     pub fn has_side_effects(&self) -> bool {
         match self {
             Code::Effect { .. } => true,
@@ -302,6 +310,10 @@ impl Code {
 
     pub fn is_label(&self) -> bool {
         matches!(self, Code::Label { .. })
+    }
+
+    pub fn is_constant(&self) -> bool {
+        matches!(self, Code::Constant { .. })
     }
 }
 

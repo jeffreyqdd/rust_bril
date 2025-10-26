@@ -2,7 +2,7 @@ use std::collections::{HashMap, HashSet};
 
 use crate::{
     dataflow::{WorklistProperty, WorklistResult},
-    representation::{AbstractFunction, Argument, BasicBlock, BlockId},
+    representation::{AbstractFunction, Argument, BlockId, ControlFlowGraph},
 };
 
 pub struct ReachingDefinitions {}
@@ -37,11 +37,12 @@ impl WorklistProperty for ReachingDefinitions {
 
     fn transfer(
         mut domain: Self::Domain,
-        block: &mut BasicBlock,
+        block_id: usize,
+        cfg: &mut ControlFlowGraph,
         arguments: Option<&Vec<Argument>>,
     ) -> WorklistResult<Self::Domain> {
         // Handle function arguments in entry block
-        if block.id == 0 {
+        if block_id == 0 {
             if let Some(args) = arguments {
                 for arg in args {
                     let defs = domain.entry(arg.name.clone()).or_default();
@@ -52,18 +53,20 @@ impl WorklistProperty for ReachingDefinitions {
         }
 
         // Process phi nodes first - they define variables at block entry
-        for phi in &block.phi_nodes {
+        for phi in &cfg.basic_blocks[block_id].phi_nodes {
             let defs = domain.entry(phi.dest.clone()).or_default();
             defs.clear();
-            defs.insert(block.id);
+            for (_var, label) in &phi.phi_args {
+                defs.insert(cfg.label_map[label]);
+            }
         }
 
         // Process regular instructions
-        for instruction in block.instructions.iter() {
+        for instruction in &cfg.basic_blocks[block_id].instructions {
             if let Some(dest) = instruction.get_destination() {
                 let defs = domain.entry(dest.to_string()).or_default();
                 defs.clear();
-                defs.insert(block.id);
+                defs.insert(block_id);
             }
         }
 
