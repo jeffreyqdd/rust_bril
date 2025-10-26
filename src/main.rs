@@ -1,9 +1,6 @@
 use clap::{Parser, ValueEnum};
 use log::LevelFilter;
-use rust_bril::{
-    bril_logger,
-    optimizations::{dce, lvn},
-};
+use rust_bril::{bril_logger, optimizations::dce, optimizations::lvn};
 use std::path::Path;
 
 // use rust_bril::{
@@ -68,6 +65,14 @@ struct Args {
     /// Run local value numbering
     #[arg(long, action)]
     lvn: bool,
+
+    /// Run loop optimizations
+    #[arg(long, action)]
+    loops: bool,
+
+    /// Skip SSA
+    #[arg(short = 's', action)]
+    skip_pass: bool,
 }
 
 impl From<LogLevel> for LevelFilter {
@@ -107,10 +112,25 @@ fn main() {
         time_start.elapsed()
     );
 
+    if args.skip_pass {
+        if let Some(filepath) = args.output {
+            log::info!("writing program to file '{}'", filepath);
+            match rich_program.to_file(Path::new(&filepath)) {
+                Ok(_) => (),
+                Err(e) => {
+                    log::error!("Failed to write program to file '{}': {}", filepath, e);
+                    std::process::exit(1);
+                }
+            };
+        } else {
+            println!("{}", rich_program.to_string());
+        }
+        return;
+    }
+
     // convert into SSA form
     let mut abstract_program = rust_bril::representation::RichAbstractProgram::from(rich_program);
 
-    // run optimizations
     if args.lvn {
         abstract_program.program.functions = abstract_program
             .program
@@ -131,6 +151,21 @@ fn main() {
             .map(|(n, af)| match dce(af) {
                 Ok(af_new) => (n, af_new),
                 Err(e) => e.error_with_context_then_exit(&abstract_program.original_text),
+            })
+            .collect();
+    }
+
+    // run optimizations
+    if args.loops {
+        abstract_program.program.functions = abstract_program
+            .program
+            .functions
+            .into_iter()
+            .map(|(n, af)| {
+                match rust_bril::optimizations::loops::loop_invariant_code_motion_pass(af) {
+                    Ok(af_new) => (n, af_new),
+                    Err(e) => e.error_with_context_then_exit(&abstract_program.original_text),
+                }
             })
             .collect();
     }

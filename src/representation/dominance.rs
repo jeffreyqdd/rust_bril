@@ -155,4 +155,9 @@ impl DominanceInfo {
     pub fn get_immediate_dominated(&self, block_id: BlockId) -> &HashSet<usize> {
         &self.tree_children[block_id]
     }
+
+    /// Check if block `a` is dominated by block `b`
+    pub fn dominated_by(&self, a: BlockId, b: BlockId) -> bool {
+        self.dom[a].contains(&b)
+    }
 }

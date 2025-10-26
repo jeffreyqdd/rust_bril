@@ -45,7 +45,7 @@ pub struct Argument {
     pub pos: Option<Position>,
 }
 
-#[derive(serde::Deserialize, serde::Serialize, Debug, Clone)]
+#[derive(serde::Deserialize, serde::Serialize, Debug, Clone, Hash, PartialEq, Eq)]
 #[serde(untagged)]
 pub enum Code {
     Label {
@@ -106,7 +106,7 @@ pub enum Code {
     },
 }
 
-#[derive(serde::Deserialize, serde::Serialize, Debug, Clone, Copy)]
+#[derive(serde::Deserialize, serde::Serialize, Debug, Clone, Copy, Hash, PartialEq, Eq)]
 #[serde(rename_all = "lowercase")]
 pub enum Noop {
     Nop,
@@ -288,6 +288,33 @@ impl Code {
             Code::Noop { pos, .. } => *pos,
         }
     }
+
+    pub fn get_labels(&self) -> Option<&Vec<String>> {
+        match self {
+            Code::Value { labels, .. } => labels.as_ref(),
+            Code::Effect { labels, .. } => labels.as_ref(),
+            _ => None,
+        }
+    }
+
+    pub fn has_side_effects(&self) -> bool {
+        match self {
+            Code::Effect { .. } => true,
+            Code::Memory { .. } => true,
+            Code::Value {
+                op: ValueOp::Call, ..
+            } => true,
+            _ => false,
+        }
+    }
+
+    pub fn is_label(&self) -> bool {
+        matches!(self, Code::Label { .. })
+    }
+
+    pub fn is_constant(&self) -> bool {
+        matches!(self, Code::Constant { .. })
+    }
 }
 
 impl std::fmt::Display for Code {
@@ -318,7 +345,7 @@ impl Literal {
                 Literal::Int(x) => Literal::Int(*x),
                 Literal::Bool(_) => panic!(),
                 Literal::Float(x) => Literal::Int(*x as i64),
-                Literal::Char(_) => panic!(),
+                Literal::Char(x) => Literal::Int(*x as i64),
             },
             Type::Bool => match self {
                 Literal::Int(x) => Literal::Bool(*x != 0),
@@ -332,9 +359,26 @@ impl Literal {
                 Literal::Float(x) => Literal::Float(*x),
                 Literal::Char(_) => panic!(),
             },
-            Type::Char => panic!("no casts to char exist"),
+            Type::Char => match self {
+                Literal::Int(x) => Literal::Char((*x as u8) as char),
+                _ => panic!(),
+            },
             Type::Ptr(_) => panic!("cannot cast to ptr type"),
             Type::None => panic!("cannot cast to none type"),
+        }
+    }
+
+    pub fn bitcast(&self, t: &Type) -> Literal {
+        match t {
+            Type::Int => match self {
+                Literal::Float(x) => Literal::Int(x.to_bits() as i64),
+                _ => panic!("invalid bitcast to int"),
+            },
+            Type::Float => match self {
+                Literal::Int(x) => Literal::Float(f64::from_bits(*x as u64)),
+                _ => panic!("invalid bitcast to float"),
+            },
+            _ => panic!("bitcast only supported between int and float"),
         }
     }
 }

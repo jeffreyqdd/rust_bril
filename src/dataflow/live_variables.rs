@@ -2,7 +2,7 @@ use std::collections::HashSet;
 
 use crate::{
     dataflow::{WorklistProperty, WorklistResult},
-    representation::{AbstractFunction, Argument, BasicBlock, BlockId, Code},
+    representation::{AbstractFunction, Argument, BlockId, Code, ControlFlowGraph},
 };
 
 pub struct LiveVariables {}
@@ -35,13 +35,14 @@ impl WorklistProperty for LiveVariables {
 
     fn transfer(
         domain: Self::Domain,
-        block: &mut BasicBlock,
+        block_id: usize,
+        cfg: &mut ControlFlowGraph,
         _: Option<&Vec<Argument>>,
     ) -> WorklistResult<Self::Domain> {
         // iterate backwards through the instructions
         //      1. process definitions first (remove from live set)
         //      2. then process arguments (add to live set)
-
+        let block = &mut cfg.basic_blocks[block_id];
         let mut domain_view: HashSet<&str> = domain.iter().map(|s| s.as_str()).collect();
 
         match &block.terminator {

@@ -33,7 +33,7 @@ pub fn init_logger(level: LevelFilter) -> Result<(), Box<dyn Error>> {
     let console_appender = ConsoleAppender::builder()
         .target(Target::Stderr)
         .encoder(Box::new(PatternEncoder::new(
-            "{d(%Y-%m-%d %H:%M:%S)} [{l}] {t} - {m}{n}",
+            "{d(%Y-%m-%d %H:%M:%S)} [{l:<5}] {t} - {m}{n}",
         )))
         .build();
 

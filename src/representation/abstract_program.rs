@@ -7,7 +7,7 @@ use crate::{
         ValueOp,
     },
 };
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
 use uuid::Uuid;
 
 // Core types for the IR-friendly representation
@@ -43,6 +43,8 @@ pub struct BasicBlock {
     pub instructions: Vec<Code>,
     pub terminator: Terminator,
     pub phi_nodes: Vec<PhiNode>,
+    pub preheader: Vec<Code>,
+    pub natural_loop_return: bool,
 }
 
 #[derive(Debug, Clone)]
@@ -124,6 +126,7 @@ impl RichAbstractProgram {
             .program
             .functions
             .into_values()
+            .map(|f| f.remap_phi_nodes())
             .map(|f| f.into_ssa_function())
             .collect();
 
@@ -138,6 +141,7 @@ impl RichAbstractProgram {
             .program
             .functions
             .into_values()
+            .map(|f| f.remap_phi_nodes())
             .map(|f| f.into_function())
             .collect();
 
@@ -163,6 +167,8 @@ impl AbstractFunction {
             instructions: std::mem::take(current_block_instrs),
             terminator: std::mem::replace(current_terminator, Terminator::Passthrough),
             phi_nodes: Vec::new(),
+            preheader: Vec::new(),
+            natural_loop_return: false,
         };
 
         *block_id += 1;
@@ -254,8 +260,29 @@ impl AbstractFunction {
     fn flatten_basic_blocks(blocks: Vec<BasicBlock>) -> Vec<Code> {
         let mut instrs = Vec::new();
 
+        let natural_loop_preheaders = blocks
+            .iter()
+            .filter_map(|block| {
+                if block.preheader.len() > 0 {
+                    Some(block.label.clone())
+                } else {
+                    None
+                }
+            })
+            .collect::<HashSet<_>>();
+
         for block in blocks {
-            // add label first
+            // if this block has a natural loop preheader, emit it first
+            if natural_loop_preheaders.contains(&block.label) {
+                instrs.push(Code::Label {
+                    label: format!("pre_header_{}", block.label),
+                    pos: None,
+                });
+                for preheader_instr in block.preheader.iter() {
+                    instrs.push(preheader_instr.clone());
+                }
+            }
+
             instrs.push(Code::Label {
                 label: block.label,
                 pos: None,
@@ -282,12 +309,55 @@ impl AbstractFunction {
             // Add block instructions
             instrs.extend(block.instructions);
 
+            // Helper function to map labels to preheaders when needed
+            let map_label_to_preheader = |label: &str| -> String {
+                if !block.natural_loop_return && natural_loop_preheaders.contains(label) {
+                    format!("pre_header_{}", label)
+                } else {
+                    label.to_string()
+                }
+            };
+
             // Add terminator instruction if present
             match block.terminator {
                 Terminator::Passthrough => continue,
                 Terminator::Ret(effect_op) => instrs.push(effect_op),
-                Terminator::Jmp(_, effect_op) => instrs.push(effect_op),
-                Terminator::Br(_, _, effect_op) => instrs.push(effect_op),
+                Terminator::Jmp(_, effect_op) => {
+                    // if this is not a natural loop backedge and the target has a preheader, jump to the preheader instead
+                    let dest_label = effect_op.get_labels().unwrap()[0].clone();
+                    let mapped_label = map_label_to_preheader(&dest_label);
+                    if mapped_label != dest_label {
+                        instrs.push(Code::Effect {
+                            op: EffectOp::Jmp,
+                            args: None,
+                            labels: Some(vec![mapped_label]),
+                            pos: None,
+                            funcs: None,
+                        });
+                    } else {
+                        instrs.push(effect_op)
+                    }
+                }
+                Terminator::Br(_, _, effect_op) => {
+                    // if this is not a natural loop backedge and any target has a preheader, map to the preheader instead
+                    let labels = effect_op.get_labels().unwrap();
+                    let true_label = &labels[0];
+                    let false_label = &labels[1];
+                    let mapped_true_label = map_label_to_preheader(true_label);
+                    let mapped_false_label = map_label_to_preheader(false_label);
+
+                    if mapped_true_label != *true_label || mapped_false_label != *false_label {
+                        instrs.push(Code::Effect {
+                            op: EffectOp::Br,
+                            args: effect_op.get_arguments().cloned(),
+                            labels: Some(vec![mapped_true_label, mapped_false_label]),
+                            pos: None,
+                            funcs: None,
+                        });
+                    } else {
+                        instrs.push(effect_op)
+                    }
+                }
             }
         }
 
@@ -308,5 +378,46 @@ impl AbstractFunction {
     fn into_function(mut self) -> Function {
         phi_nodes::remove_phi_nodes(&mut self);
         self.into_ssa_function()
+    }
+
+    fn remap_phi_nodes(mut self) -> Self {
+        // only remap if not backedge
+        let natural_loop_returns = self
+            .cfg
+            .basic_blocks
+            .iter()
+            .filter_map(|block| {
+                if block.natural_loop_return {
+                    Some(block.label.clone())
+                } else {
+                    None
+                }
+            })
+            .collect::<HashSet<_>>();
+
+        for block in &mut self.cfg.basic_blocks {
+            if block.preheader.is_empty() {
+                continue;
+            }
+
+            for phi_node in &mut block.phi_nodes {
+                // Update phi_args to remap labels to preheaders when appropriate
+                for (phi_var, phi_label) in &mut phi_node.phi_args {
+                    // If this label corresponds to a natural loop with a preheader,
+                    // remap it to point to the preheader instead
+                    if block
+                        .preheader
+                        .iter()
+                        .find(|instr| instr.get_destination() == Some(phi_var))
+                        .is_some()
+                        && !natural_loop_returns.contains(phi_label)
+                    {
+                        *phi_label = format!("pre_header_{}", block.label);
+                    }
+                }
+            }
+        }
+
+        self
     }
 }

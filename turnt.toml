@@ -11,6 +11,9 @@ command = "./target/release/rust_bril {filename} --log-level error --dce | brili
 [envs.check_lvn_dce]
 command = "./target/release/rust_bril {filename} --log-level error --lvn --dce | brilirs $(awk '/^# ARGS:/ {{for (i=3; i<=NF; i++) print $i}}' {filename})"
 
+[envs.check_loop]
+command = "./target/release/rust_bril {filename} --log-level error --loops | brilirs $(awk '/^# ARGS:/ {{for (i=3; i<=NF; i++) print $i}}' {filename})"
+
 ### Dynamic Instruction Count: not checked for correctness
 [envs.bench_reference]
 command = "bril2json < {filename} | brilirs -p $(awk '/^# ARGS:/ {{for (i=3; i<=NF; i++) print $i}}' {filename}) > /dev/null"
@@ -27,3 +30,11 @@ output.ssa_dce_prof = "2"
 [envs.bench_ssa_lvn_dce]
 command = "./target/release/rust_bril {filename} --log-level error --lvn --dce | brilirs -p $(awk '/^# ARGS:/ {{for (i=3; i<=NF; i++) print $i}}' {filename}) > /dev/null"
 output.ssa_lvn_dce_prof = "2"
+
+[envs.bench_ssa_loop]
+command = "./target/release/rust_bril {filename} --log-level error --loops | brilirs -p $(awk '/^# ARGS:/ {{for (i=3; i<=NF; i++) print $i}}' {filename}) > /dev/null"
+output.ssa_loop_prof = "2"
+
+[envs.bench_ssa_lvn_dce_loop]
+command = "./target/release/rust_bril {filename} --log-level error --loops --lvn --dce | brilirs -p $(awk '/^# ARGS:/ {{for (i=3; i<=NF; i++) print $i}}' {filename}) > /dev/null"
+output.ssa_lvn_dce_loop_prof = "2"

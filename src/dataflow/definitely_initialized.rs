@@ -2,7 +2,9 @@ use std::collections::HashSet;
 
 use crate::{
     dataflow::{WorklistError, WorklistProperty, WorklistResult},
-    representation::{AbstractFunction, Argument, BasicBlock, BlockId, Code, Terminator},
+    representation::{
+        AbstractFunction, Argument, BasicBlock, BlockId, Code, ControlFlowGraph, Terminator,
+    },
 };
 
 /// A dataflow analysis to determine which variables are definitely initialized at each program point.
@@ -54,12 +56,13 @@ impl WorklistProperty for DefinitelyInitialized {
             acc
         }))
     }
-
     fn transfer(
         mut domain: Self::Domain,
-        block: &mut BasicBlock,
+        block_id: usize,
+        cfg: &mut ControlFlowGraph,
         args: Option<&Vec<Argument>>,
     ) -> WorklistResult<Self::Domain> {
+        let block = &mut cfg.basic_blocks[block_id];
         if block.id == 0 {
             if let Some(arguments) = args {
                 for arg in arguments {
