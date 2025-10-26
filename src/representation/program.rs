@@ -345,7 +345,7 @@ impl Literal {
                 Literal::Int(x) => Literal::Int(*x),
                 Literal::Bool(_) => panic!(),
                 Literal::Float(x) => Literal::Int(*x as i64),
-                Literal::Char(_) => panic!(),
+                Literal::Char(x) => Literal::Int(*x as i64),
             },
             Type::Bool => match self {
                 Literal::Int(x) => Literal::Bool(*x != 0),
@@ -359,9 +359,26 @@ impl Literal {
                 Literal::Float(x) => Literal::Float(*x),
                 Literal::Char(_) => panic!(),
             },
-            Type::Char => panic!("no casts to char exist"),
+            Type::Char => match self {
+                Literal::Int(x) => Literal::Char((*x as u8) as char),
+                _ => panic!(),
+            },
             Type::Ptr(_) => panic!("cannot cast to ptr type"),
             Type::None => panic!("cannot cast to none type"),
+        }
+    }
+
+    pub fn bitcast(&self, t: &Type) -> Literal {
+        match t {
+            Type::Int => match self {
+                Literal::Float(x) => Literal::Int(x.to_bits() as i64),
+                _ => panic!("invalid bitcast to int"),
+            },
+            Type::Float => match self {
+                Literal::Int(x) => Literal::Float(f64::from_bits(*x as u64)),
+                _ => panic!("invalid bitcast to float"),
+            },
+            _ => panic!("bitcast only supported between int and float"),
         }
     }
 }

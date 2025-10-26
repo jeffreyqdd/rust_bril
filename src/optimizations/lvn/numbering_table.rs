@@ -116,6 +116,93 @@ impl LocalValueNumberingTable {
         }
     }
 
+    fn is_constexpr(&self, operation: &Operation) -> bool {
+        match operation {
+            Operation::Value(value_op) => match value_op {
+                ValueOp::Add
+                | ValueOp::Sub
+                | ValueOp::Mul
+                | ValueOp::Div
+                | ValueOp::Fadd
+                | ValueOp::Fsub
+                | ValueOp::Fmul
+                | ValueOp::Fdiv
+                | ValueOp::Or
+                | ValueOp::Not
+                | ValueOp::And
+                | ValueOp::Eq
+                | ValueOp::Lt
+                | ValueOp::Gt
+                | ValueOp::Le
+                | ValueOp::Ge
+                | ValueOp::Feq
+                | ValueOp::Flt
+                | ValueOp::Fgt
+                | ValueOp::Fle
+                | ValueOp::Fge
+                | ValueOp::Ceq
+                | ValueOp::Clt
+                | ValueOp::Cle
+                | ValueOp::Cgt
+                | ValueOp::Cge
+                | ValueOp::Float2bits
+                | ValueOp::Bits2float
+                | ValueOp::Char2int
+                | ValueOp::Int2char => true,
+                _ => false,
+            },
+            _ => false,
+        }
+    }
+
+    fn eval_constexpr(&self, op: &Operation, _t: &Type, literals: &Vec<Literal>) -> Literal {
+        assert!(self.is_constexpr(op));
+        match op {
+            Operation::Value(value_op) => match value_op {
+                ValueOp::Add => literals[0].cast_to(&Type::Int) + literals[1].cast_to(&Type::Int),
+                ValueOp::Sub => literals[0].cast_to(&Type::Int) - literals[1].cast_to(&Type::Int),
+                ValueOp::Mul => literals[0].cast_to(&Type::Int) * literals[1].cast_to(&Type::Int),
+                ValueOp::Div => literals[0].cast_to(&Type::Int) / literals[1].cast_to(&Type::Int),
+                ValueOp::Fadd => {
+                    literals[0].cast_to(&Type::Float) + literals[1].cast_to(&Type::Float)
+                }
+                ValueOp::Fsub => {
+                    literals[0].cast_to(&Type::Float) - literals[1].cast_to(&Type::Float)
+                }
+                ValueOp::Fmul => {
+                    literals[0].cast_to(&Type::Float) * literals[1].cast_to(&Type::Float)
+                }
+                ValueOp::Fdiv => {
+                    literals[0].cast_to(&Type::Float) / literals[1].cast_to(&Type::Float)
+                }
+                ValueOp::Or => literals[0].cast_to(&Type::Bool) | literals[1].cast_to(&Type::Bool),
+                ValueOp::Not => !literals[0].cast_to(&Type::Bool),
+                ValueOp::And => literals[0].cast_to(&Type::Bool) & literals[1].cast_to(&Type::Bool),
+                ValueOp::Eq => Literal::Bool(literals[0] == literals[1]),
+                ValueOp::Lt => Literal::Bool(literals[0] < literals[1]),
+                ValueOp::Gt => Literal::Bool(literals[0] > literals[1]),
+                ValueOp::Le => Literal::Bool(literals[0] <= literals[1]),
+                ValueOp::Ge => Literal::Bool(literals[0] >= literals[1]),
+                ValueOp::Feq => Literal::Bool(literals[0] == literals[1]),
+                ValueOp::Flt => Literal::Bool(literals[0] < literals[1]),
+                ValueOp::Fgt => Literal::Bool(literals[0] > literals[1]),
+                ValueOp::Fle => Literal::Bool(literals[0] <= literals[1]),
+                ValueOp::Fge => Literal::Bool(literals[0] >= literals[1]),
+                ValueOp::Ceq => Literal::Bool(literals[0] == literals[1]),
+                ValueOp::Clt => Literal::Bool(literals[0] < literals[1]),
+                ValueOp::Cgt => Literal::Bool(literals[0] > literals[1]),
+                ValueOp::Cle => Literal::Bool(literals[0] <= literals[1]),
+                ValueOp::Cge => Literal::Bool(literals[0] >= literals[1]),
+                ValueOp::Char2int => literals[0].cast_to(&Type::Int),
+                ValueOp::Int2char => literals[0].cast_to(&Type::Char),
+                ValueOp::Float2bits => literals[0].bitcast(&Type::Int),
+                ValueOp::Bits2float => literals[0].bitcast(&Type::Float),
+                _ => panic!("should not be here"),
+            },
+            _ => panic!("should not be here"),
+        }
+    }
+
     pub fn intersect(&self, other: &Self) -> Self {
         let mut new_table = HashMap::new();
         let mut new_cloud = HashMap::new();
@@ -146,6 +233,33 @@ impl LocalValueNumberingTable {
         };
 
         ret
+    }
+
+    pub fn fold(&self, expr: Expr) -> Expr {
+        if let Expr::Expr(t, op, args) = expr.clone() {
+            if self.is_constexpr(&op) {
+                let constexpr = args
+                    .iter()
+                    .filter_map(|uid| {
+                        for (expr, (x, y)) in self.table.iter() {
+                            if x == uid {
+                                if let Expr::ConstExpr(_, lit) = expr {
+                                    return Some(lit.clone());
+                                }
+                            }
+                        }
+                        return None;
+                    })
+                    .collect::<Vec<_>>();
+
+                if constexpr.len() == args.len() {
+                    let folded_literal = self.eval_constexpr(&op, &t, &constexpr);
+                    log::trace!("folding expr {:?} into constant {:?}", expr, folded_literal);
+                    return Expr::ConstExpr(t, folded_literal);
+                }
+            }
+        }
+        return expr;
     }
 
     pub fn canonicalize(&mut self, code: Code) -> Code {
@@ -254,7 +368,7 @@ impl LocalValueNumberingTable {
                     .collect();
 
                 // do copy propagation if possible
-                let expr = if let Some(expr) = self.flatten_copy(&code_copy) {
+                let mut expr = if let Some(expr) = self.flatten_copy(&code_copy) {
                     expr
                 } else {
                     if self.is_commutative(&Operation::Value(op.clone())) {
@@ -266,7 +380,20 @@ impl LocalValueNumberingTable {
                         remapped_args.clone(),
                     )
                 };
-                log::trace!("processing expr: {:?}", expr);
+
+                // if expression can be constant folded, do it
+                // if both expression args are constants, we can constant fold
+                expr = self.fold(expr);
+                if let Expr::ConstExpr(t, l) = expr {
+                    assert!(t == value_type);
+                    return self.canonicalize(Code::Constant {
+                        op: ConstantOp::Const,
+                        dest: dest,
+                        constant_type: value_type,
+                        value: l,
+                        pos: pos,
+                    });
+                }
 
                 let (num, ch, ret) = if let Some((num, var)) = self.table.get(&expr) {
                     (
